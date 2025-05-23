@@ -21,7 +21,7 @@ export default function Login() {
         console.log(err);
       } else {
         Alert.alert('Sucesso', 'Login realizado com sucesso!');
-        router.push('/explore');
+        router.push('/(tabs)');
       }
     });
   };
@@ -48,4 +48,4 @@ export default function Login() {
       </View>
     </View>
   );
-}
+} 
