@@ -1,14 +1,31 @@
+import * as FileSystem from 'expo-file-system';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, Button, Text, TextInput, View } from 'react-native';
 import { useAuth } from '../context/AuthContext';
+
+
+
+
+const deleteDatabase = async () => {
+  const dbPath = `${FileSystem.documentDirectory}SQLite/habitosdeleitura.db`;
+  const fileInfo = await FileSystem.getInfoAsync(dbPath);
+  if (fileInfo.exists) {
+    await FileSystem.deleteAsync(dbPath);
+    console.log('Banco deletado com sucesso.');
+  } else {
+    console.log('Banco não encontrado.');
+  }
+};
 
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const router = useRouter();
   const { login } = useAuth();
-
+  // useEffect(() => {
+  //   deleteDatabase();
+  // }, []);
   const handleLogin = () => {
     if (!username || !password) {
       Alert.alert('Erro', 'Preencha todos os campos');

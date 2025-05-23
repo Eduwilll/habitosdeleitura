@@ -6,19 +6,33 @@ import { createTable, insertUser } from '../../services/db';
 export default function Register() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
   const router = useRouter();
 
   useEffect(() => {
     createTable();
   }, []);
 
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   const handleRegister = () => {
-    if (!username || !password) {
+    if (!username || !password || !email) {
       Alert.alert('Erro', 'Preencha todos os campos');
       return;
     }
 
-    insertUser(username, password, (err, result) => {
+    if (!validateEmail(email)) {
+      setEmailError('Email inválido');
+      return;
+    }
+
+    setEmailError('');
+
+    insertUser(username, email, password, (err, result) => {
       if (err) {
         Alert.alert('Erro ao registrar', err.message);
         console.log(err);
@@ -38,6 +52,21 @@ export default function Register() {
         onChangeText={setUsername}
         style={{ borderWidth: 1, padding: 8, marginVertical: 10 }}
       />
+      <TextInput
+        placeholder="Email"
+        value={email}
+        onChangeText={(text) => {
+          setEmail(text);
+          setEmailError('');
+        }}
+        keyboardType="email-address"
+        autoCapitalize="none"
+        style={[
+          { borderWidth: 1, padding: 8, marginVertical: 10 },
+          emailError ? { borderColor: 'red' } : {}
+        ]}
+      />
+      {emailError ? <Text style={{ color: 'red', marginBottom: 10 }}>{emailError}</Text> : null}
       <TextInput
         placeholder="Senha"
         value={password}

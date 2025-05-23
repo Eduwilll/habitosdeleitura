@@ -36,6 +36,7 @@ export default function DatabaseViewer() {
           <Text style={styles.headerCell}>ID</Text>
           <Text style={styles.headerCell}>Username</Text>
           <Text style={styles.headerCell}>Password</Text>
+          <Text style={styles.headerCell}>Email</Text>
         </View>
         {users.length === 0 ? (
           <View style={styles.row}>
@@ -47,6 +48,7 @@ export default function DatabaseViewer() {
               <Text style={styles.cell}>{user.id}</Text>
               <Text style={styles.cell}>{user.username}</Text>
               <Text style={styles.cell}>{user.password}</Text>
+              <Text style={styles.cell}>{user.email}</Text>
             </View>
           ))
         )}

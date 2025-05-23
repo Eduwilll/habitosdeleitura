@@ -20,7 +20,7 @@ export const createTable = () => {
   try {
     console.log('Creating table...');
     const database = getDatabase();
-    database.execAsync('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, password TEXT);')
+    database.execAsync('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, email TEXT UNIQUE, password TEXT);')
       .then(() => console.log('Table created successfully'))
       .catch(err => console.error('Error creating table:', err));
   } catch (error) {
@@ -48,11 +48,11 @@ export const listAllUsers = (callback: (error: Error | null, users?: any[]) => v
   
   
 
-export const insertUser = (username: string, password: string, callback: (error: Error | null, result?: any) => void) => {
+export const insertUser = (username: string, email: string, password: string, callback: (error: Error | null, result?: any) => void) => {
   try {
-    console.log('Inserting user:', { username, password });
+    console.log('Inserting user:', { username, email, password });
     const database = getDatabase();
-    const sql = `INSERT INTO users (username, password) VALUES ('${username}', '${password}')`;
+    const sql = `INSERT INTO users (username, email, password) VALUES ('${username}', '${email}', '${password}')`;
     console.log('Executing SQL:', sql);
     database.execAsync(sql)
       .then(resultSet => {
