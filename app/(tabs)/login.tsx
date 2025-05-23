@@ -1,28 +1,43 @@
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Alert, Button, Text, TextInput, View } from 'react-native';
-import { getUser, insertUser } from '../../services/db';
+import { getUser } from '../../services/db';
 
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const router = useRouter();
-
+  // useEffect(() => {
+  //   const copyDb = async () => {
+  //     const dbName = 'habitosdeleitura.db';
+  //     const dbUri = `${FileSystem.documentDirectory}SQLite/${dbName}`;
+  //     const newLocation = `${FileSystem.documentDirectory}${dbName}`;
+  
+  //     try {
+  //       const exists = await FileSystem.getInfoAsync(dbUri);
+  //       if (exists.exists) {
+  //         await FileSystem.copyAsync({
+  //           from: dbUri,
+  //           to: newLocation,
+  //         });
+  //         console.log('Banco copiado para:', newLocation);
+  //       } else {
+  //         console.log('Banco de dados não encontrado!');
+  //       }
+  //     } catch (error) {
+  //       console.error('Erro ao copiar o banco:', error);
+  //     }
+  //   };
+  
+  //   copyDb();
+  // }, []);
   const handleLogin = () => {
     if (!username || !password) {
       Alert.alert('Erro', 'Preencha todos os campos');
       return;
     }
 
-    useEffect(() => {
-      insertUser('teste', '1234', (err, res) => {
-        if (err) {
-          console.error('Erro ao inserir usuário de teste:', err);
-        } else {
-          console.log('Usuário de teste inserido:', res);
-        }
-      });
-    }, []);
+    
     getUser(username, password, (err, user) => {
       if (err) {
         Alert.alert('Erro ao fazer login', err.message);

@@ -75,21 +75,14 @@ export const getUser = (username: string, password: string, callback: (error: Er
     const database = getDatabase();
     const sql = `SELECT * FROM users WHERE username = '${username}' AND password = '${password}'`;
     console.log('Executing SQL:', sql);
-    database.execAsync(sql)
-      .then(resultSet => {
-        console.log('Query result:', resultSet);
-        try {
-          const results = typeof resultSet === 'string' ? JSON.parse(resultSet) : resultSet;
-          console.log('Parsed results:', results);
-          if (results && Array.isArray(results) && results.length > 0) {
-            callback(null, results[0]);
-          } else {
-            console.log('No user found');
-            callback(null, null);
-          }
-        } catch (err) {
-          console.error('Error parsing results:', err);
-          callback(err instanceof Error ? err : new Error('Failed to parse results'));
+    database.getAllAsync(sql)
+      .then(results => {
+        console.log('Query results:', results);
+        if (!results || results.length === 0) {
+          console.log('No user found');
+          callback(null, null);
+        } else {
+          callback(null, results[0]);
         }
       })
       .catch(err => {
