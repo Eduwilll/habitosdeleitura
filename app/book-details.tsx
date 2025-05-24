@@ -54,17 +54,17 @@ export default function BookDetailsScreen() {
             </ThemedText>
             {book.authors && (
               <ThemedText style={styles.authors}>
-                by {book.authors.join(', ')}
+                Por {book.authors.join(', ')}
               </ThemedText>
             )}
             {book.publishedDate && (
               <ThemedText style={styles.publishedDate}>
-                Published: {new Date(book.publishedDate).getFullYear()}
+                Publicado em: {new Date(book.publishedDate).getFullYear()}
               </ThemedText>
             )}
             {book.pageCount && (
               <ThemedText style={styles.pageCount}>
-                {book.pageCount} pages
+                {book.pageCount} páginas
               </ThemedText>
             )}
           </View>
@@ -77,7 +77,7 @@ export default function BookDetailsScreen() {
             onPress={handleReadBook}
           >
             <FontAwesome name="book" size={20} color="white" style={styles.buttonIcon} />
-            <ThemedText style={styles.buttonText}>Read</ThemedText>
+            <ThemedText style={styles.buttonText}>Ler</ThemedText>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.button, isInLibrary ? styles.addedButton : styles.addButton]}
@@ -91,7 +91,7 @@ export default function BookDetailsScreen() {
               style={styles.buttonIcon}
             />
             <ThemedText style={styles.buttonText}>
-              {isInLibrary ? 'Added to Library' : 'Add to Library'}
+              {isInLibrary ? 'Adicionado à Biblioteca' : 'Adicionar à Biblioteca'}
             </ThemedText>
           </TouchableOpacity>
         </View>

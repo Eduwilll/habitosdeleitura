@@ -11,6 +11,8 @@ export default function Profile() {
       <View style={styles.userInfo}>
         <Text style={styles.label}>Usuário:</Text>
         <Text style={styles.value}>{user?.username}</Text>
+        <Text style={styles.label}>Email:</Text>
+        <Text style={styles.value}>{user?.email}</Text>
       </View>
       <Button title="Sair" onPress={logout} color="#FF3B30" />
     </View>

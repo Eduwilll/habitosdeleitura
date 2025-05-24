@@ -14,23 +14,29 @@ export interface Book {
   averageRating?: number;
 }
 
-export interface SearchResponse {
+interface SearchResponse {
   items: Book[];
   totalItems: number;
 }
 
-export const searchBooks = async (query: string, maxResults: number = 20): Promise<SearchResponse> => {
+export async function searchBooks(
+  query: string,
+  page: number = 1,
+  language: string = 'pt-BR'
+): Promise<SearchResponse> {
   try {
+    const startIndex = (page - 1) * 20;
     const response = await fetch(
-      `${BASE_URL}/volumes?q=${encodeURIComponent(query)}&maxResults=${maxResults}&key=${GOOGLE_BOOKS_API_KEY}`
+      `${BASE_URL}/volumes?q=${encodeURIComponent(
+        query
+      )}&langRestrict=${language}&startIndex=${startIndex}&maxResults=20&key=${GOOGLE_BOOKS_API_KEY}`
     );
-    
+
     if (!response.ok) {
       throw new Error('Failed to fetch books');
     }
 
     const data = await response.json();
-    
     return {
       items: data.items?.map((item: any) => ({
         id: item.id,
@@ -49,7 +55,7 @@ export const searchBooks = async (query: string, maxResults: number = 20): Promi
     console.error('Error searching books:', error);
     throw error;
   }
-};
+}
 
 export const getBookById = async (bookId: string): Promise<Book> => {
   try {
