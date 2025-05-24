@@ -3,8 +3,9 @@ import { ThemedView } from '@/components/ThemedView';
 import { getLibraryBooks, removeBookFromLibrary, updateBookStatus } from '@/services/db';
 import { Book } from '@/services/googleBooks';
 import { FontAwesome } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { Image } from 'expo-image';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, Dimensions, Modal, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
 type BookStatusFilter = 'all' | 'reading' | 'completed' | 'to-read';
@@ -18,11 +19,7 @@ export default function LibraryScreen() {
   const [currentBook, setCurrentBook] = useState<Book | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadLibraryBooks();
-  }, []);
-
-  const loadLibraryBooks = () => {
+  const loadLibraryBooks = useCallback(() => {
     setLoading(true);
     getLibraryBooks((error, books) => {
       if (error) {
@@ -33,7 +30,19 @@ export default function LibraryScreen() {
       }
       setLoading(false);
     });
-  };
+  }, []);
+
+  // Load books when screen mounts
+  useEffect(() => {
+    loadLibraryBooks();
+  }, [loadLibraryBooks]);
+
+  // Refresh books when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      loadLibraryBooks();
+    }, [loadLibraryBooks])
+  );
 
   // Get unique genres from books
   const genres = ['all', ...new Set(books.map(book => book.categories?.[0]).filter((genre): genre is string => Boolean(genre)))];

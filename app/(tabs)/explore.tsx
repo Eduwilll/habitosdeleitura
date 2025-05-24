@@ -71,7 +71,7 @@ const BookItem = memo(({ item, onPress }: { item: Book; onPress: (book: Book) =>
     <View style={styles.bookInfo}>
       <ThemedText type="defaultSemiBold" numberOfLines={2} style={styles.bookTitle}>
         {item.title}
-      </ThemedText>
+        </ThemedText>
       {item.authors && (
         <ThemedText style={styles.authorText} numberOfLines={1}>
           {item.authors.join(', ')}
@@ -102,7 +102,7 @@ const GenreButton = memo(({
   >
     <ThemedText style={[styles.genreText, isSelected && styles.selectedGenreText]}>
       {genre}
-    </ThemedText>
+        </ThemedText>
   </TouchableOpacity>
 ));
 
