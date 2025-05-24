@@ -75,6 +75,8 @@ export default function LibraryScreen() {
         Alert.alert('Erro', 'Falha ao atualizar status do livro.');
         console.error('Error updating book status:', error);
       } else {
+        // Update currentBook state with new status
+        setCurrentBook(prev => prev ? { ...prev, status: newStatus } : null);
         loadLibraryBooks();
       }
     });
