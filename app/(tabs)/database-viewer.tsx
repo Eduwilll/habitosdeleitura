@@ -1,5 +1,6 @@
+import { FontAwesome } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { getLibraryBooks, listAllUsers } from '../../services/db';
 import { Book } from '../../services/googleBooks';
 
@@ -7,12 +8,19 @@ export default function DatabaseViewer() {
   const [users, setUsers] = useState<any[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     console.log('DatabaseViewer mounted');
+    loadData();
+  }, []);
+
+  const loadData = () => {
+    setIsLoading(true);
+    setError(null);
     loadUsers();
     loadBooks();
-  }, []);
+  };
 
   const loadUsers = () => {
     console.log('Loading users...');
@@ -24,6 +32,7 @@ export default function DatabaseViewer() {
         console.log('Users loaded:', result);
         setUsers(result || []);
       }
+      setIsLoading(false);
     });
   };
 
@@ -37,6 +46,7 @@ export default function DatabaseViewer() {
         console.log('Books loaded:', result);
         setBooks(result || []);
       }
+      setIsLoading(false);
     });
   };
 
@@ -46,7 +56,20 @@ export default function DatabaseViewer() {
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.title}>Database Contents</Text>
+      <View style={styles.headerContainer}>
+        <Text style={styles.title}>Database Contents</Text>
+        <TouchableOpacity 
+          style={[styles.reloadButton, isLoading && styles.reloadButtonDisabled]} 
+          onPress={loadData}
+          disabled={isLoading}
+        >
+          <FontAwesome 
+            name="refresh" 
+            size={20} 
+            color={isLoading ? '#999' : '#007AFF'} 
+          />
+        </TouchableOpacity>
+      </View>
       {error && <Text style={styles.error}>Error: {error}</Text>}
 
       {/* Users Table */}
@@ -107,10 +130,23 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 20,
+  },
+  reloadButton: {
+    padding: 10,
+    borderRadius: 8,
+    backgroundColor: '#f0f0f0',
+  },
+  reloadButtonDisabled: {
+    opacity: 0.5,
   },
   sectionTitle: {
     fontSize: 20,

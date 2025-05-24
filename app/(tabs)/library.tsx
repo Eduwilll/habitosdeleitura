@@ -18,6 +18,7 @@ export default function LibraryScreen() {
   const [isReaderOpen, setIsReaderOpen] = useState(false);
   const [currentBook, setCurrentBook] = useState<Book | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const loadLibraryBooks = useCallback(() => {
     setLoading(true);
@@ -94,6 +95,7 @@ export default function LibraryScreen() {
                 Alert.alert('Erro', 'Falha ao remover livro da biblioteca.');
                 console.error('Error removing book:', error);
               } else {
+                closeReader();
                 loadLibraryBooks();
               }
             });
@@ -106,15 +108,19 @@ export default function LibraryScreen() {
   const openBook = async (book: Book) => {
     setCurrentBook(book);
     setIsReaderOpen(true);
-    
-    if (book.status === 'to-read') {
-      handleStatusChange(book.id, 'reading');
-    }
+    //Quando acionado o livro é atribuido para 'reading'
+    // if (book.status === 'to-read') {
+    //   handleStatusChange(book.id, 'reading');
+    // }
   };
 
   const closeReader = () => {
     setIsReaderOpen(false);
     setCurrentBook(null);
+  };
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
   };
 
   return (
@@ -204,12 +210,6 @@ export default function LibraryScreen() {
                 </ThemedText>
                 <View style={styles.statusRow}>
                   <View style={[styles.statusIndicator, { backgroundColor: getStatusColor(book.status) }]} />
-                  <TouchableOpacity
-                    style={styles.removeButton}
-                    onPress={() => handleRemoveBook(book.id)}
-                  >
-                    <FontAwesome name="trash" size={14} color="#FF3B30" />
-                  </TouchableOpacity>
                 </View>
               </View>
             </TouchableOpacity>
@@ -237,18 +237,119 @@ export default function LibraryScreen() {
                 {currentBook?.authors?.join(', ')}
               </ThemedText>
             </View>
-            <TouchableOpacity style={styles.menuButton}>
-              <FontAwesome name="ellipsis-v" size={20} color="#007AFF" />
-            </TouchableOpacity>
+            <View style={styles.menuContainer}>
+              <TouchableOpacity style={styles.menuButton} onPress={toggleMenu}>
+                <FontAwesome name="ellipsis-v" size={20} color="#007AFF" />
+              </TouchableOpacity>
+              {isMenuOpen && (
+                <View style={styles.menuOptions}>
+                  <TouchableOpacity 
+                    style={styles.menuOption}
+                    onPress={() => {
+                      if (currentBook) {
+                        handleRemoveBook(currentBook.id);
+                        setIsMenuOpen(false);
+                      }
+                    }}
+                  >
+                    <FontAwesome name="trash" size={16} color="#FF3B30" style={styles.menuIcon} />
+                    <ThemedText style={[styles.menuText, styles.deleteText]}>
+                      Remover da Biblioteca
+                    </ThemedText>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
           </View>
 
-          <View style={styles.readerContent}>
+          <ScrollView style={styles.readerContent}>
+            {/* Book Cover */}
+            <View style={styles.readerCoverContainer}>
+              {currentBook?.thumbnail ? (
+                <Image
+                  source={{ uri: currentBook.thumbnail }}
+                  style={styles.readerCover}
+                  contentFit="cover"
+                />
+              ) : (
+                <ThemedView style={styles.readerCoverPlaceholder}>
+                  <FontAwesome name="book" size={48} color="#808080" />
+                </ThemedView>
+              )}
+            </View>
+
+            {/* Status Buttons */}
+            <View style={styles.statusButtonsContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.statusButton,
+                  currentBook?.status === 'to-read' && styles.statusButtonActive,
+                  { borderTopLeftRadius: 8, borderBottomLeftRadius: 8 }
+                ]}
+                onPress={() => currentBook && handleStatusChange(currentBook.id, 'to-read')}
+              >
+                <FontAwesome 
+                  name="bookmark" 
+                  size={16} 
+                  color={currentBook?.status === 'to-read' ? '#fff' : '#FF9500'} 
+                />
+                <ThemedText style={[
+                  styles.statusButtonText,
+                  currentBook?.status === 'to-read' && styles.statusButtonTextActive
+                ]}>
+                  Para Ler
+                </ThemedText>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.statusButton,
+                  currentBook?.status === 'reading' && styles.statusButtonActive,
+                ]}
+                onPress={() => currentBook && handleStatusChange(currentBook.id, 'reading')}
+              >
+                <FontAwesome 
+                  name="book" 
+                  size={16} 
+                  color={currentBook?.status === 'reading' ? '#fff' : '#007AFF'} 
+                />
+                <ThemedText style={[
+                  styles.statusButtonText,
+                  currentBook?.status === 'reading' && styles.statusButtonTextActive
+                ]}>
+                  Lendo
+                </ThemedText>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.statusButton,
+                  currentBook?.status === 'completed' && styles.statusButtonActive,
+                  { borderTopRightRadius: 8, borderBottomRightRadius: 8 }
+                ]}
+                onPress={() => currentBook && handleStatusChange(currentBook.id, 'completed')}
+              >
+                <FontAwesome 
+                  name="check" 
+                  size={16} 
+                  color={currentBook?.status === 'completed' ? '#fff' : '#34C759'} 
+                />
+                <ThemedText style={[
+                  styles.statusButtonText,
+                  currentBook?.status === 'completed' && styles.statusButtonTextActive
+                ]}>
+                  Concluído
+                </ThemedText>
+              </TouchableOpacity>
+            </View>
+
+            {/* Book Description */}
             {currentBook?.description ? (
-              <ScrollView style={styles.descriptionContainer}>
+              <View style={styles.descriptionContainer}>
                 <ThemedText style={styles.descriptionText}>
                   {currentBook.description}
                 </ThemedText>
-              </ScrollView>
+              </View>
             ) : (
               <View style={styles.noContentContainer}>
                 <ThemedText style={styles.noContentText}>
@@ -256,7 +357,7 @@ export default function LibraryScreen() {
                 </ThemedText>
               </View>
             )}
-          </View>
+          </ScrollView>
         </View>
       </Modal>
     </View>
@@ -360,7 +461,6 @@ const styles = StyleSheet.create({
   },
   statusRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: 8,
   },
@@ -368,9 +468,6 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-  },
-  removeButton: {
-    padding: 4,
   },
   readerContainer: {
     flex: 1,
@@ -402,11 +499,62 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 2,
   },
+  menuContainer: {
+    position: 'relative',
+  },
   menuButton: {
     padding: 8,
   },
+  menuOptions: {
+    position: 'absolute',
+    top: 40,
+    right: 0,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    zIndex: 1000,
+  },
+  menuOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    minWidth: 200,
+  },
+  menuIcon: {
+    marginRight: 12,
+  },
+  menuText: {
+    fontSize: 16,
+  },
+  deleteText: {
+    color: '#FF3B30',
+  },
   readerContent: {
     flex: 1,
+  },
+  readerCoverContainer: {
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  readerCover: {
+    width: 200,
+    height: 300,
+    borderRadius: 12,
+  },
+  readerCoverPlaceholder: {
+    width: 200,
+    height: 300,
+    borderRadius: 12,
+    backgroundColor: '#f5f5f5',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   descriptionContainer: {
     padding: 16,
@@ -426,5 +574,36 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     textAlign: 'center',
+  },
+  statusButtonsContainer: {
+    flexDirection: 'row',
+    marginHorizontal: 16,
+    marginVertical: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    overflow: 'hidden',
+  },
+  statusButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#fff',
+    borderRightWidth: 1,
+    borderRightColor: '#e0e0e0',
+  },
+  statusButtonActive: {
+    backgroundColor: '#007AFF',
+  },
+  statusButtonText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#666',
+  },
+  statusButtonTextActive: {
+    color: '#fff',
   },
 });
