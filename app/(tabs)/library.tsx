@@ -70,13 +70,20 @@ export default function LibraryScreen() {
   };
 
   const handleStatusChange = (bookId: string, newStatus: 'reading' | 'completed' | 'to-read') => {
+    // Update local state immediately for faster UI response
+    setCurrentBook(prev => prev ? { ...prev, status: newStatus } : null);
+    setBooks(prevBooks => 
+      prevBooks.map(book => 
+        book.id === bookId ? { ...book, status: newStatus } : book
+      )
+    );
+
+    // Update database in the background
     updateBookStatus(bookId, newStatus, (error) => {
       if (error) {
         Alert.alert('Erro', 'Falha ao atualizar status do livro.');
         console.error('Error updating book status:', error);
-      } else {
-        // Update currentBook state with new status
-        setCurrentBook(prev => prev ? { ...prev, status: newStatus } : null);
+        // Revert changes if update fails
         loadLibraryBooks();
       }
     });
@@ -119,6 +126,8 @@ export default function LibraryScreen() {
   const closeReader = () => {
     setIsReaderOpen(false);
     setCurrentBook(null);
+    // Refresh library list when closing the modal
+    loadLibraryBooks();
   };
 
   const toggleMenu = () => {
