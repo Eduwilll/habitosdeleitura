@@ -12,6 +12,7 @@ export interface Book {
   pageCount?: number;
   categories?: string[];
   averageRating?: number;
+  status?: 'reading' | 'completed' | 'to-read';
 }
 
 interface SearchResponse {

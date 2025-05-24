@@ -23,9 +23,12 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const router = useRouter();
   const { login } = useAuth();
+
+  // // use to delete the database SQLite
   // useEffect(() => {
   //   deleteDatabase();
   // }, []);
+
   const handleLogin = () => {
     if (!username || !password) {
       Alert.alert('Erro', 'Preencha todos os campos');

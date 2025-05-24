@@ -6,6 +6,7 @@ import { Alert, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-nat
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { addBookToLibrary } from '@/services/db';
 import { Book } from '@/services/googleBooks';
 
 export default function BookDetailsScreen() {
@@ -15,14 +16,20 @@ export default function BookDetailsScreen() {
   const [isInLibrary, setIsInLibrary] = useState(false);
 
   const handleAddToLibrary = () => {
-    // TODO: Implement adding to library
-    setIsInLibrary(true);
-    Alert.alert('Success', 'Book added to your library!');
+    addBookToLibrary(book, (error) => {
+      if (error) {
+        Alert.alert('Erro', 'Falha ao adicionar livro à biblioteca.');
+        console.error('Error adding book to library:', error);
+      } else {
+        setIsInLibrary(true);
+        Alert.alert('Sucesso', 'Livro adicionado à sua biblioteca!');
+      }
+    });
   };
 
   const handleReadBook = () => {
     // TODO: Implement reading functionality
-    Alert.alert('Coming Soon', 'Reading functionality will be available soon!');
+    Alert.alert('Em Breve', 'A funcionalidade de leitura estará disponível em breve!');
   };
 
   return (

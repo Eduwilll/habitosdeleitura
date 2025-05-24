@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Alert, Button, Text, TextInput, View } from 'react-native';
-import { createTable, insertUser } from '../../services/db';
+import { createTables, insertUser } from '../../services/db';
 
 export default function Register() {
   const [username, setUsername] = useState('');
@@ -11,7 +11,7 @@ export default function Register() {
   const router = useRouter();
 
   useEffect(() => {
-    createTable();
+    createTables();
   }, []);
 
   const validateEmail = (email: string) => {

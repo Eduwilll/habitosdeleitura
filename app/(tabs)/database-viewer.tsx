@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { listAllUsers } from '../../services/db';
+import { getLibraryBooks, listAllUsers } from '../../services/db';
+import { Book } from '../../services/googleBooks';
 
 export default function DatabaseViewer() {
   const [users, setUsers] = useState<any[]>([]);
+  const [books, setBooks] = useState<Book[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     console.log('DatabaseViewer mounted');
     loadUsers();
+    loadBooks();
   }, []);
 
   const loadUsers = () => {
@@ -24,13 +27,30 @@ export default function DatabaseViewer() {
     });
   };
 
+  const loadBooks = () => {
+    console.log('Loading books...');
+    getLibraryBooks((err, result) => {
+      if (err) {
+        console.error('Error in loadBooks:', err);
+        setError(err.message);
+      } else {
+        console.log('Books loaded:', result);
+        setBooks(result || []);
+      }
+    });
+  };
+
   console.log('Current users state:', users);
+  console.log('Current books state:', books);
   console.log('Current error state:', error);
 
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Database Contents</Text>
       {error && <Text style={styles.error}>Error: {error}</Text>}
+
+      {/* Users Table */}
+      <Text style={styles.sectionTitle}>Users</Text>
       <View style={styles.table}>
         <View style={styles.header}>
           <Text style={styles.headerCell}>ID</Text>
@@ -53,6 +73,31 @@ export default function DatabaseViewer() {
           ))
         )}
       </View>
+
+      {/* Books Table */}
+      <Text style={styles.sectionTitle}>Library Books</Text>
+      <View style={styles.table}>
+        <View style={styles.header}>
+          <Text style={styles.headerCell}>ID</Text>
+          <Text style={styles.headerCell}>Title</Text>
+          <Text style={styles.headerCell}>Authors</Text>
+          <Text style={styles.headerCell}>Status</Text>
+        </View>
+        {books.length === 0 ? (
+          <View style={styles.row}>
+            <Text style={styles.cell}>No books found</Text>
+          </View>
+        ) : (
+          books.map((book, index) => (
+            <View key={index} style={styles.row}>
+              <Text style={styles.cell}>{book.id}</Text>
+              <Text style={styles.cell}>{book.title}</Text>
+              <Text style={styles.cell}>{book.authors?.join(', ')}</Text>
+              <Text style={styles.cell}>{book.status}</Text>
+            </View>
+          ))
+        )}
+      </View>
     </ScrollView>
   );
 }
@@ -67,6 +112,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 20,
   },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginTop: 20,
+    marginBottom: 10,
+  },
   error: {
     color: 'red',
     marginBottom: 10,
@@ -75,6 +126,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 5,
+    marginBottom: 20,
   },
   header: {
     flexDirection: 'row',
