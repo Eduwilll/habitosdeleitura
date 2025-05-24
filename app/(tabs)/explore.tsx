@@ -1,6 +1,8 @@
+import { FontAwesome } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, FlatList, Platform, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, FlatList, Platform, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { useDebounce } from '../../hooks/useDebounce';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -9,6 +11,7 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Book, searchBooks } from '@/services/googleBooks';
 
 export default function TabTwoScreen() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(false);
@@ -38,31 +41,36 @@ export default function TabTwoScreen() {
     debouncedSearch(text);
   }, [debouncedSearch]);
 
+  const handleBookPress = (book: Book) => {
+    router.push({
+      pathname: '/book-details',
+      params: { book: JSON.stringify(book) }
+    });
+  };
+
   const renderHeader = () => (
     <ThemedView style={styles.header}>
-      <IconSymbol
-        size={100}
-        color="#808080"
-        name="book"
-        style={styles.headerIcon}
-      />
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">Explore Books</ThemedText>
       </ThemedView>
       <ThemedView style={styles.searchContainer}>
+        <FontAwesome name="search" size={20} color="#8E8E93" style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
           placeholder="Search for books..."
           value={searchQuery}
           onChangeText={handleSearch}
-          placeholderTextColor="#808080"
+          placeholderTextColor="#8E8E93"
         />
       </ThemedView>
     </ThemedView>
   );
 
   const renderBookItem = ({ item }: { item: Book }) => (
-    <ThemedView style={styles.bookItem}>
+    <TouchableOpacity 
+      style={styles.bookItem}
+      onPress={() => handleBookPress(item)}
+    >
       {item.thumbnail ? (
         <Image
           source={{ uri: item.thumbnail }}
@@ -75,7 +83,7 @@ export default function TabTwoScreen() {
         </ThemedView>
       )}
       <ThemedView style={styles.bookInfo}>
-        <ThemedText type="defaultSemiBold" numberOfLines={2}>
+        <ThemedText type="defaultSemiBold" numberOfLines={2} style={styles.bookTitle}>
           {item.title}
         </ThemedText>
         {item.authors && (
@@ -83,13 +91,18 @@ export default function TabTwoScreen() {
             {item.authors.join(', ')}
           </ThemedText>
         )}
+        {item.categories && item.categories.length > 0 && (
+          <ThemedText numberOfLines={1} style={styles.genreText}>
+            {item.categories[0]}
+          </ThemedText>
+        )}
         {item.publishedDate && (
           <ThemedText style={styles.publishedDate}>
-            Published: {item.publishedDate}
+            {new Date(item.publishedDate).getFullYear()}
           </ThemedText>
         )}
       </ThemedView>
-    </ThemedView>
+    </TouchableOpacity>
   );
 
   const renderEmptyComponent = () => {
@@ -130,6 +143,7 @@ export default function TabTwoScreen() {
         ListEmptyComponent={renderEmptyComponent}
         contentContainerStyle={styles.listContent}
         stickyHeaderIndices={[0]}
+        showsVerticalScrollIndicator={false}
       />
     </View>
   );
@@ -138,70 +152,88 @@ export default function TabTwoScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#fff',
   },
   header: {
-    backgroundColor: '#D0D0D0',
+    backgroundColor: '#fff',
     paddingTop: Platform.OS === 'ios' ? 50 : 20,
-    paddingBottom: 20,
+    paddingBottom: 16,
     paddingHorizontal: 16,
-  },
-  headerIcon: {
-    alignSelf: 'center',
-    marginBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
   titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
     marginBottom: 16,
   },
   searchContainer: {
-    marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    height: 44,
+  },
+  searchIcon: {
+    marginRight: 10,
   },
   searchInput: {
-    height: 40,
-    borderWidth: 1,
-    borderColor: '#808080',
-    borderRadius: 8,
-    paddingHorizontal: 12,
+    flex: 1,
+    height: '100%',
     fontSize: 16,
-    backgroundColor: '#FFFFFF',
+    color: '#000',
   },
   listContent: {
     flexGrow: 1,
+    padding: 16,
   },
   bookItem: {
     flexDirection: 'row',
-    marginHorizontal: 16,
-    marginBottom: 16,
+    marginBottom: 20,
+    backgroundColor: '#fff',
+    borderRadius: 12,
     padding: 12,
-    borderRadius: 8,
-    gap: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   bookThumbnail: {
-    width: 80,
-    height: 120,
-    borderRadius: 4,
+    width: 100,
+    height: 150,
+    borderRadius: 8,
   },
   bookThumbnailPlaceholder: {
-    width: 80,
-    height: 120,
-    borderRadius: 4,
-    backgroundColor: '#D0D0D0',
+    width: 100,
+    height: 150,
+    borderRadius: 8,
+    backgroundColor: '#f5f5f5',
     justifyContent: 'center',
     alignItems: 'center',
   },
   bookInfo: {
     flex: 1,
+    marginLeft: 16,
     justifyContent: 'center',
-    gap: 4,
+  },
+  bookTitle: {
+    fontSize: 16,
+    marginBottom: 4,
   },
   authorText: {
     fontSize: 14,
-    opacity: 0.8,
+    color: '#666',
+    marginBottom: 4,
+  },
+  genreText: {
+    fontSize: 12,
+    color: '#888',
+    fontStyle: 'italic',
+    marginBottom: 4,
   },
   publishedDate: {
     fontSize: 12,
-    opacity: 0.6,
+    color: '#999',
   },
   loadingContainer: {
     padding: 20,
