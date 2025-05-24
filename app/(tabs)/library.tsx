@@ -151,47 +151,70 @@ export default function LibraryScreen() {
     }
   };
 
-  const openBook = async (book: Book) => {
-    if (!book.localUri && !book.uri) {
-      Alert.alert("No File", "This book does not have an associated file to open.");
-      return;
-    }
-
-    setCurrentBook(book);
-    setIsReaderOpen(true);
-    
-    // Update book status to reading if it was to-read
-    if (book.status === 'to-read') {
-      setBooks(prevBooks => 
-        prevBooks.map(b => 
-          b.id === book.id ? { ...b, status: 'reading' as const } : b
-        )
-      );
-    }
-  };
-
-  const closeReader = () => {
-    setIsReaderOpen(false);
-    setCurrentBook(null);
-  };
-
   const renderPDFViewer = (fileUri: string) => {
-    // For PDF viewing, we'll use a WebView with PDF.js or Google Docs viewer
-    const googleDocsUrl = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(fileUri)}`;
-    
+    // Create a simple HTML viewer that uses the file URI directly
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+          <style>
+            body { margin: 0; padding: 0; background: #f0f0f0; }
+            .pdf-container { 
+              width: 100%; 
+              height: 100vh; 
+              display: flex;
+              justify-content: center;
+              align-items: center;
+            }
+            .pdf-viewer {
+              width: 100%;
+              height: 100%;
+              border: none;
+            }
+            .loading {
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+              color: #666;
+              text-align: center;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="pdf-container">
+            <div class="loading">Loading PDF...</div>
+            <object
+              class="pdf-viewer"
+              data="${fileUri}"
+              type="application/pdf"
+            >
+              <p>Unable to display PDF file. <a href="${fileUri}">Download</a> instead.</p>
+            </object>
+          </div>
+        </body>
+      </html>
+    `;
+
     return (
-      <WebView
-        source={{ uri: googleDocsUrl }}
-        style={{ flex: 1 }}
-        onError={(error) => {
-          console.error('WebView error:', error);
-          Alert.alert("Error", "Failed to load PDF. Please try again.");
-        }}
-        startInLoadingState={true}
-        scalesPageToFit={true}
-        javaScriptEnabled={true}
-        domStorageEnabled={true}
-      />
+      <View style={styles.pdfContainer}>
+        <WebView
+          source={{ html: htmlContent }}
+          style={styles.pdf}
+          onError={(error) => {
+            console.error('WebView error:', error);
+            Alert.alert("Error", "Failed to load PDF. Please try again.");
+          }}
+          startInLoadingState={true}
+          scalesPageToFit={true}
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+          originWhitelist={['*']}
+          mixedContentMode="always"
+        />
+      </View>
     );
   };
 
@@ -234,6 +257,30 @@ export default function LibraryScreen() {
         style={{ flex: 1 }}
       />
     );
+  };
+
+  const openBook = async (book: Book) => {
+    if (!book.localUri && !book.uri) {
+      Alert.alert("No File", "This book does not have an associated file to open.");
+      return;
+    }
+
+    setCurrentBook(book);
+    setIsReaderOpen(true);
+    
+    // Update book status to reading if it was to-read
+    if (book.status === 'to-read') {
+      setBooks(prevBooks => 
+        prevBooks.map(b => 
+          b.id === book.id ? { ...b, status: 'reading' as const } : b
+        )
+      );
+    }
+  };
+
+  const closeReader = () => {
+    setIsReaderOpen(false);
+    setCurrentBook(null);
   };
 
   return (
@@ -468,5 +515,14 @@ const styles = StyleSheet.create({
   },
   readerContent: {
     flex: 1,
+  },
+  pdfContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  pdf: {
+    flex: 1,
+    width: Dimensions.get('window').width,
+    backgroundColor: '#fff',
   },
 });

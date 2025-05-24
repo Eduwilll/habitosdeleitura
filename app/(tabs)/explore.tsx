@@ -1,110 +1,221 @@
 import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useCallback, useState } from 'react';
+import { ActivityIndicator, FlatList, Platform, StyleSheet, TextInput, View } from 'react-native';
+import { useDebounce } from '../../hooks/useDebounce';
 
-import { Collapsible } from '@/components/Collapsible';
-import { ExternalLink } from '@/components/ExternalLink';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import { Book, searchBooks } from '@/services/googleBooks';
 
 export default function TabTwoScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
+  const [searchQuery, setSearchQuery] = useState('');
+  const [books, setBooks] = useState<Book[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const debouncedSearch = useDebounce(async (query: string) => {
+    if (!query.trim()) {
+      setBooks([]);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      const results = await searchBooks(query);
+      setBooks(results.items);
+    } catch (err) {
+      setError('Failed to fetch books. Please try again.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, 500);
+
+  const handleSearch = useCallback((text: string) => {
+    setSearchQuery(text);
+    debouncedSearch(text);
+  }, [debouncedSearch]);
+
+  const renderHeader = () => (
+    <ThemedView style={styles.header}>
+      <IconSymbol
+        size={100}
+        color="#808080"
+        name="book"
+        style={styles.headerIcon}
+      />
       <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Explore</ThemedText>
+        <ThemedText type="title">Explore Books</ThemedText>
       </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
+      <ThemedView style={styles.searchContainer}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search for books..."
+          value={searchQuery}
+          onChangeText={handleSearch}
+          placeholderTextColor="#808080"
+        />
+      </ThemedView>
+    </ThemedView>
+  );
+
+  const renderBookItem = ({ item }: { item: Book }) => (
+    <ThemedView style={styles.bookItem}>
+      {item.thumbnail ? (
+        <Image
+          source={{ uri: item.thumbnail }}
+          style={styles.bookThumbnail}
+          contentFit="cover"
+        />
+      ) : (
+        <ThemedView style={styles.bookThumbnailPlaceholder}>
+          <IconSymbol name="book" size={24} color="#808080" />
+        </ThemedView>
+      )}
+      <ThemedView style={styles.bookInfo}>
+        <ThemedText type="defaultSemiBold" numberOfLines={2}>
+          {item.title}
         </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image source={require('@/assets/images/react-logo.png')} style={{ alignSelf: 'center' }} />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Custom fonts">
-        <ThemedText>
-          Open <ThemedText type="defaultSemiBold">app/_layout.tsx</ThemedText> to see how to load{' '}
-          <ThemedText style={{ fontFamily: 'SpaceMono' }}>
-            custom fonts such as this one.
+        {item.authors && (
+          <ThemedText numberOfLines={1} style={styles.authorText}>
+            {item.authors.join(', ')}
           </ThemedText>
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/versions/latest/sdk/font">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful <ThemedText type="defaultSemiBold">react-native-reanimated</ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+        )}
+        {item.publishedDate && (
+          <ThemedText style={styles.publishedDate}>
+            Published: {item.publishedDate}
+          </ThemedText>
+        )}
+      </ThemedView>
+    </ThemedView>
+  );
+
+  const renderEmptyComponent = () => {
+    if (loading) {
+      return (
+        <ThemedView style={styles.loadingContainer}>
+          <ActivityIndicator size="large" />
+        </ThemedView>
+      );
+    }
+
+    if (error) {
+      return (
+        <ThemedView style={styles.errorContainer}>
+          <ThemedText style={styles.errorText}>{error}</ThemedText>
+        </ThemedView>
+      );
+    }
+
+    if (searchQuery && books.length === 0) {
+      return (
+        <ThemedView style={styles.noResultsContainer}>
+          <ThemedText>No books found. Try a different search term.</ThemedText>
+        </ThemedView>
+      );
+    }
+
+    return null;
+  };
+
+  return (
+    <View style={styles.container}>
+      <FlatList
+        data={books}
+        renderItem={renderBookItem}
+        keyExtractor={(item) => item.id}
+        ListHeaderComponent={renderHeader}
+        ListEmptyComponent={renderEmptyComponent}
+        contentContainerStyle={styles.listContent}
+        stickyHeaderIndices={[0]}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  container: {
+    flex: 1,
+  },
+  header: {
+    backgroundColor: '#D0D0D0',
+    paddingTop: Platform.OS === 'ios' ? 50 : 20,
+    paddingBottom: 20,
+    paddingHorizontal: 16,
+  },
+  headerIcon: {
+    alignSelf: 'center',
+    marginBottom: 16,
   },
   titleContainer: {
     flexDirection: 'row',
     gap: 8,
+    marginBottom: 16,
+  },
+  searchContainer: {
+    marginBottom: 16,
+  },
+  searchInput: {
+    height: 40,
+    borderWidth: 1,
+    borderColor: '#808080',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    fontSize: 16,
+    backgroundColor: '#FFFFFF',
+  },
+  listContent: {
+    flexGrow: 1,
+  },
+  bookItem: {
+    flexDirection: 'row',
+    marginHorizontal: 16,
+    marginBottom: 16,
+    padding: 12,
+    borderRadius: 8,
+    gap: 12,
+  },
+  bookThumbnail: {
+    width: 80,
+    height: 120,
+    borderRadius: 4,
+  },
+  bookThumbnailPlaceholder: {
+    width: 80,
+    height: 120,
+    borderRadius: 4,
+    backgroundColor: '#D0D0D0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  bookInfo: {
+    flex: 1,
+    justifyContent: 'center',
+    gap: 4,
+  },
+  authorText: {
+    fontSize: 14,
+    opacity: 0.8,
+  },
+  publishedDate: {
+    fontSize: 12,
+    opacity: 0.6,
+  },
+  loadingContainer: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  errorContainer: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  errorText: {
+    color: 'red',
+  },
+  noResultsContainer: {
+    padding: 20,
+    alignItems: 'center',
   },
 });

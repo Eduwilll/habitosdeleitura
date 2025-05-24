@@ -9,8 +9,8 @@ export default function TabsLayout() {
       tabBarInactiveTintColor: 'gray',
       tabBarStyle: {
         backgroundColor: 'white',
-      },
-    }}>
+          },
+      }}>
       <Tabs.Screen
         name="index"
         options={{
@@ -39,6 +39,7 @@ export default function TabsLayout() {
           tabBarIcon: ({ color }) => <FontAwesome name="user" size={24} color={color} />,
         }}
       />
+      
     </Tabs>
   );
 }
