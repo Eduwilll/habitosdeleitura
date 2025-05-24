@@ -5,7 +5,7 @@ import { Book } from '@/services/googleBooks';
 import { FontAwesome } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import React, { useEffect, useState } from 'react';
-import { Alert, Dimensions, Modal, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Dimensions, Modal, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
 type BookStatusFilter = 'all' | 'reading' | 'completed' | 'to-read';
 
@@ -35,7 +35,8 @@ export default function LibraryScreen() {
     });
   };
 
-  const genres = ['all', ...new Set(books.map(book => book.categories?.[0]).filter(Boolean)), 'Imported'];
+  // Get unique genres from books
+  const genres = ['all', ...new Set(books.map(book => book.categories?.[0]).filter((genre): genre is string => Boolean(genre)))];
 
   const filteredBooks = books.filter(book => {
     const matchesSearch = book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -108,40 +109,62 @@ export default function LibraryScreen() {
   };
 
   return (
-    <ThemedView style={styles.container}>
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <FontAwesome name="search" size={20} color="#8E8E93" style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Buscar livros..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          placeholderTextColor="#8E8E93"
-        />
-      </View>
+    <View style={styles.container}>
+      <ThemedView style={styles.header}>
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <FontAwesome name="search" size={20} color="#8E8E93" style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Buscar livros..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholderTextColor="#8E8E93"
+          />
+        </View>
 
-      {/* Status Filter */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.statusContainer}
-        contentContainerStyle={styles.statusContent}
-      >
-        {(['all', 'reading', 'completed', 'to-read'] as const).map((status) => (
-          <TouchableOpacity
-            key={status}
-            style={[styles.statusButton, selectedStatus === status && styles.selectedStatus]}
-            onPress={() => setSelectedStatus(status)}
-          >
-            <ThemedText style={[styles.statusText, selectedStatus === status && styles.selectedStatusText]}>
-              {status === 'all' ? 'Todos' :
-               status === 'reading' ? 'Lendo' :
-               status === 'completed' ? 'Concluídos' : 'Para Ler'}
-            </ThemedText>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+        {/* Status Filter */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.filterContainer}
+          contentContainerStyle={styles.filterContent}
+        >
+          {(['all', 'reading', 'completed', 'to-read'] as const).map((status) => (
+            <TouchableOpacity
+              key={status}
+              style={[styles.filterButton, selectedStatus === status && styles.selectedFilter]}
+              onPress={() => setSelectedStatus(status)}
+            >
+              <ThemedText style={[styles.filterText, selectedStatus === status && styles.selectedFilterText]}>
+                {status === 'all' ? 'Todos' :
+                 status === 'reading' ? 'Lendo' :
+                 status === 'completed' ? 'Concluídos' : 'Para Ler'}
+              </ThemedText>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {/* Genre Filter */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.filterContainer}
+          contentContainerStyle={styles.filterContent}
+        >
+          {genres.map((genre) => (
+            <TouchableOpacity
+              key={genre}
+              style={[styles.filterButton, selectedGenre === genre && styles.selectedFilter]}
+              onPress={() => setSelectedGenre(genre)}
+            >
+              <ThemedText style={[styles.filterText, selectedGenre === genre && styles.selectedFilterText]}>
+                {genre === 'all' ? 'Todos os Gêneros' : genre}
+              </ThemedText>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </ThemedView>
 
       {/* Books Grid */}
       <ScrollView style={styles.booksContainer}>
@@ -170,11 +193,6 @@ export default function LibraryScreen() {
                 <ThemedText style={styles.authorText} numberOfLines={1}>
                   {book.authors?.join(', ')}
                 </ThemedText>
-                {book.categories?.[0] && (
-                  <ThemedText style={styles.genreText} numberOfLines={1}>
-                    {book.categories[0]}
-                  </ThemedText>
-                )}
                 <View style={styles.statusRow}>
                   <View style={[styles.statusIndicator, { backgroundColor: getStatusColor(book.status) }]} />
                   <TouchableOpacity
@@ -198,7 +216,6 @@ export default function LibraryScreen() {
         onRequestClose={closeReader}
       >
         <View style={styles.readerContainer}>
-          {/* Reader Header */}
           <View style={styles.readerHeader}>
             <TouchableOpacity onPress={closeReader} style={styles.closeButton}>
               <FontAwesome name="arrow-left" size={24} color="#007AFF" />
@@ -216,7 +233,6 @@ export default function LibraryScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Reader Content */}
           <View style={styles.readerContent}>
             {currentBook?.description ? (
               <ScrollView style={styles.descriptionContainer}>
@@ -234,7 +250,7 @@ export default function LibraryScreen() {
           </View>
         </View>
       </Modal>
-    </ThemedView>
+    </View>
   );
 }
 
@@ -244,8 +260,13 @@ const CARD_WIDTH = (width - 48) / 2;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
     backgroundColor: '#fff',
+  },
+  header: {
+    padding: 16,
+    paddingTop: Platform.OS === 'ios' ? 50 : 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
   searchContainer: {
     flexDirection: 'row',
@@ -265,27 +286,27 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#000',
   },
-  statusContainer: {
+  filterContainer: {
     marginBottom: 16,
   },
-  statusContent: {
+  filterContent: {
     paddingRight: 16,
   },
-  statusButton: {
+  filterButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
     backgroundColor: '#f5f5f5',
     marginRight: 8,
   },
-  selectedStatus: {
+  selectedFilter: {
     backgroundColor: '#007AFF',
   },
-  statusText: {
+  filterText: {
     fontSize: 14,
     color: '#666',
   },
-  selectedStatusText: {
+  selectedFilterText: {
     color: '#fff',
   },
   booksContainer: {
@@ -295,6 +316,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+    padding: 16,
   },
   bookCard: {
     width: CARD_WIDTH,
@@ -326,12 +348,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#555',
     marginTop: 4,
-  },
-  genreText: {
-    fontSize: 11,
-    color: '#777',
-    marginTop: 2,
-    fontStyle: 'italic',
   },
   statusRow: {
     flexDirection: 'row',
