@@ -1,14 +1,19 @@
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Alert, Button, Text, TextInput, View } from 'react-native';
+import { Alert, TextInput, TouchableOpacity } from 'react-native';
 import { createTables, insertUser } from '../../services/db';
 
-export default function Register() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [email, setEmail] = useState('');
-  const [emailError, setEmailError] = useState('');
+import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
+import { colors, globalStyles } from '@/styles/global';
+
+export default function RegisterScreen() {
   const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [username, setUsername] = useState('');
+  const [emailError, setEmailError] = useState('');
 
   useEffect(() => {
     createTables();
@@ -20,8 +25,13 @@ export default function Register() {
   };
 
   const handleRegister = () => {
-    if (!username || !password || !email) {
-      Alert.alert('Erro', 'Preencha todos os campos');
+    if (!username || !password || !email || !confirmPassword) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert('Error', 'Passwords do not match');
       return;
     }
 
@@ -44,40 +54,62 @@ export default function Register() {
   };
 
   return (
-    <View style={{ padding: 20 }}>
-      <Text style={{ fontSize: 24 }}>Registro</Text>
+    <ThemedView style={globalStyles.authContainer}>
+      <ThemedText style={globalStyles.authTitle}>Register</ThemedText>
+      
       <TextInput
+        style={globalStyles.authInput}
         placeholder="Usuário"
         value={username}
         onChangeText={setUsername}
-        style={{ borderWidth: 1, padding: 8, marginVertical: 10 }}
       />
+      
       <TextInput
+        style={[
+          globalStyles.authInput,
+          emailError ? { borderColor: colors.danger } : {}
+        ]}
         placeholder="Email"
         value={email}
-        onChangeText={(text) => {
-          setEmail(text);
-          setEmailError('');
-        }}
+        onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
-        style={[
-          { borderWidth: 1, padding: 8, marginVertical: 10 },
-          emailError ? { borderColor: 'red' } : {}
-        ]}
+        autoCorrect={false}
       />
-      {emailError ? <Text style={{ color: 'red', marginBottom: 10 }}>{emailError}</Text> : null}
+      {emailError ? (
+        <ThemedText style={{ color: colors.danger, marginBottom: 10 }}>
+          {emailError}
+        </ThemedText>
+      ) : null}
+      
       <TextInput
-        placeholder="Senha"
+        style={globalStyles.authInput}
+        placeholder="Password"
         value={password}
-        secureTextEntry
         onChangeText={setPassword}
-        style={{ borderWidth: 1, padding: 8, marginBottom: 10 }}
+        secureTextEntry
       />
-      <Button title="Registrar" onPress={handleRegister} />
-      <View style={{ marginTop: 10 }}>
-        <Button title="Voltar para Login" onPress={() => router.push('/login')} />
-      </View>
-    </View>
+
+      <TextInput
+        style={globalStyles.authInput}
+        placeholder="Confirm Password"
+        value={confirmPassword}
+        onChangeText={setConfirmPassword}
+        secureTextEntry
+      />
+      
+      <TouchableOpacity style={globalStyles.authButton} onPress={handleRegister}>
+        <ThemedText style={globalStyles.authButtonText}>Register</ThemedText>
+      </TouchableOpacity>
+      
+      <TouchableOpacity 
+        style={globalStyles.authLink}
+        onPress={() => router.push('/login')}
+      >
+        <ThemedText style={globalStyles.authLinkText}>
+          Already have an account? Login
+        </ThemedText>
+      </TouchableOpacity>
+    </ThemedView>
   );
 } 

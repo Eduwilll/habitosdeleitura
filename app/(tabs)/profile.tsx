@@ -1,45 +1,59 @@
-import React from 'react';
-import { Button, StyleSheet, Text, View } from 'react-native';
-import { useAuth } from '../context/AuthContext';
+import { FontAwesome } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
-export default function Profile() {
-  const { user, logout } = useAuth();
+import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
+import { colors, globalStyles } from '@/styles/global';
+
+export default function ProfileScreen() {
+  const router = useRouter();
+
+  const handleLogout = () => {
+    // Implement logout logic here
+    router.replace('/login');
+  };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Perfil</Text>
-      <View style={styles.userInfo}>
-        <Text style={styles.label}>Usuário:</Text>
-        <Text style={styles.value}>{user?.username}</Text>
-        <Text style={styles.label}>Email:</Text>
-        <Text style={styles.value}>{user?.email}</Text>
+    <ThemedView style={globalStyles.container}>
+      <View style={globalStyles.header}>
+        <ThemedText type="title">Profile</ThemedText>
       </View>
-      <Button title="Sair" onPress={logout} color="#FF3B30" />
-    </View>
+
+      <View style={styles.profileContent}>
+        <View style={styles.profileHeader}>
+          <View style={styles.avatarContainer}>
+            <FontAwesome name="user-circle" size={80} color={colors.primary} />
+          </View>
+          <ThemedText type="subtitle" style={styles.username}>
+            User Name
+          </ThemedText>
+          <ThemedText style={styles.email}>user@example.com</ThemedText>
+        </View>
+
+        <TouchableOpacity style={globalStyles.authButton} onPress={handleLogout}>
+          <ThemedText style={globalStyles.authButtonText}>Logout</ThemedText>
+        </TouchableOpacity>
+      </View>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  profileContent: {
     padding: 20,
-    backgroundColor: '#fff',
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
+  profileHeader: {
+    alignItems: 'center' as const,
+    marginBottom: 30,
   },
-  userInfo: {
-    marginBottom: 20,
+  avatarContainer: {
+    marginBottom: 16,
   },
-  label: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 5,
+  username: {
+    marginBottom: 8,
   },
-  value: {
-    fontSize: 18,
-    fontWeight: '500',
+  email: {
+    color: colors.text.secondary,
   },
 }); 

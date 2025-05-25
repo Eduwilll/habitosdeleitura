@@ -1,11 +1,12 @@
 import * as FileSystem from 'expo-file-system';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, Button, Text, TextInput, View } from 'react-native';
+import { Alert, TextInput, TouchableOpacity } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 
-
-
+import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
+import { globalStyles } from '@/styles/global';
 
 const deleteDatabase = async () => {
   const dbPath = `${FileSystem.documentDirectory}SQLite/habitosdeleitura.db`;
@@ -18,11 +19,11 @@ const deleteDatabase = async () => {
   }
 };
 
-export default function Login() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+export default function LoginScreen() {
   const router = useRouter();
   const { login } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   // // use to delete the database SQLite
   // useEffect(() => {
@@ -30,12 +31,12 @@ export default function Login() {
   // }, []);
 
   const handleLogin = () => {
-    if (!username || !password) {
+    if (!email || !password) {
       Alert.alert('Erro', 'Preencha todos os campos');
       return;
     }
 
-    login(username, password, (err) => {
+    login(email, password, (err) => {
       if (err) {
         Alert.alert('Erro ao fazer login', err.message);
         console.log(err);
@@ -47,25 +48,39 @@ export default function Login() {
   };
 
   return (
-    <View style={{ padding: 20 }}>
-      <Text style={{ fontSize: 24 }}>Login</Text>
+    <ThemedView style={globalStyles.authContainer}>
+      <ThemedText style={globalStyles.authTitle}>Login</ThemedText>
+      
       <TextInput
-        placeholder="Usuário"
-        value={username}
-        onChangeText={setUsername}
-        style={{ borderWidth: 1, padding: 8, marginVertical: 10 }}
+        style={globalStyles.authInput}
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
+        autoCorrect={false}
       />
+      
       <TextInput
-        placeholder="Senha"
+        style={globalStyles.authInput}
+        placeholder="Password"
         value={password}
-        secureTextEntry
         onChangeText={setPassword}
-        style={{ borderWidth: 1, padding: 8, marginBottom: 10 }}
+        secureTextEntry
       />
-      <Button title="Entrar" onPress={handleLogin} />
-      <View style={{ marginTop: 10 }}>
-        <Button title="Ir para Registro" onPress={() => router.push('/register')} />
-      </View>
-    </View>
+      
+      <TouchableOpacity style={globalStyles.authButton} onPress={handleLogin}>
+        <ThemedText style={globalStyles.authButtonText}>Login</ThemedText>
+      </TouchableOpacity>
+      
+      <TouchableOpacity 
+        style={globalStyles.authLink}
+        onPress={() => router.push('/register')}
+      >
+        <ThemedText style={globalStyles.authLinkText}>
+          Don't have an account? Register
+        </ThemedText>
+      </TouchableOpacity>
+    </ThemedView>
   );
 } 
