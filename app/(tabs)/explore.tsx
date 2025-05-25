@@ -1,7 +1,7 @@
 import { FontAwesome } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { memo, useCallback, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Dimensions, FlatList, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -23,31 +23,13 @@ const GENRES = [
   'Filosofia'
 ];
 
-// Initial books for each genre
-const INITIAL_BOOKS: Book[] = [
-  {
-    id: '1',
-    title: 'O Grande Gatsby',
-    authors: ['F. Scott Fitzgerald'],
-    description: 'Uma história sobre o fabulosamente rico Jay Gatsby e seu amor pela bela Daisy Buchanan.',
-    thumbnail: 'https://books.google.com/books/content?id=1yx1tgAACAAJ&printsec=frontcover&img=1&zoom=1&source=gbs_api',
-    publishedDate: '1925-04-10',
-    pageCount: 180,
-    categories: ['Ficção', 'Clássico'],
-    averageRating: 4.2
-  },
-  {
-    id: '2',
-    title: '1984',
-    authors: ['George Orwell'],
-    description: 'Um romance distópico de ficção científica e um conto de advertência.',
-    thumbnail: 'https://books.google.com/books/content?id=1yx1tgAACAAJ&printsec=frontcover&img=1&zoom=1&source=gbs_api',
-    publishedDate: '1949-06-08',
-    pageCount: 328,
-    categories: ['Ficção Científica', 'Distopia'],
-    averageRating: 4.5
-  },
-  // Add more initial books here
+// Popular and bestselling books queries
+const POPULAR_QUERIES = [
+  'subject:fiction',
+  'subject:romance',
+  'subject:fantasy',
+  'subject:mystery',
+  'subject:biography'
 ];
 
 // Memoized Book Item Component
@@ -185,8 +167,8 @@ const SearchBar = memo(({
 
 export default function TabTwoScreen() {
   const router = useRouter();
-  const [books, setBooks] = useState<Book[]>(INITIAL_BOOKS);
-  const [loading, setLoading] = useState(false);
+  const [books, setBooks] = useState<Book[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -194,11 +176,43 @@ export default function TabTwoScreen() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
+  const fetchPopularBooks = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Fetch books for each popular query
+      const popularBooksPromises = POPULAR_QUERIES.map(query => 
+        searchBooks(query, 1, 'pt-BR')
+      );
+      
+      const results = await Promise.all(popularBooksPromises);
+      
+      // Combine and deduplicate books
+      const allBooks = results.flatMap(result => result.items);
+      const uniqueBooks = allBooks.filter((book, index, self) =>
+        index === self.findIndex(b => b.id === book.id)
+      );
+      
+      setBooks(uniqueBooks);
+      setHasMore(true);
+      setCurrentPage(1);
+    } catch (err) {
+      setError(strings.common.error);
+      console.error('Error fetching popular books:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Load popular books on initial mount
+  useEffect(() => {
+    fetchPopularBooks();
+  }, [fetchPopularBooks]);
+
   const performSearch = useCallback(async (query: string) => {
     if (!query.trim()) {
-      setBooks(INITIAL_BOOKS);
-      setCurrentPage(1);
-      setHasMore(true);
+      fetchPopularBooks();
       return;
     }
 
@@ -215,7 +229,7 @@ export default function TabTwoScreen() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [fetchPopularBooks]);
 
   const handleSearch = useCallback((text: string) => {
     setSearchQuery(text);
@@ -223,18 +237,30 @@ export default function TabTwoScreen() {
   }, [performSearch]);
 
   const loadMoreBooks = async () => {
-    if (loading || isLoadingMore || !hasMore || !searchQuery.trim()) return;
+    if (loading || isLoadingMore || !hasMore) return;
 
     try {
       setIsLoadingMore(true);
       const nextPage = currentPage + 1;
-      const results = await searchBooks(
-        searchQuery,
-        nextPage,
-        'pt-BR'
-      );
+      const query = searchQuery || selectedGenre;
       
-      if (results.items.length > 0) {
+      if (!query) {
+        // Load more popular books
+        const results = await Promise.all(
+          POPULAR_QUERIES.map(q => searchBooks(q, nextPage, 'pt-BR'))
+        );
+        
+        const newBooks = results.flatMap(result => result.items);
+        const uniqueNewBooks = newBooks.filter(
+          newBook => !books.some(existingBook => existingBook.id === newBook.id)
+        );
+        
+        setBooks(prevBooks => [...prevBooks, ...uniqueNewBooks]);
+        setCurrentPage(nextPage);
+        setHasMore(uniqueNewBooks.length > 0);
+      } else {
+        // Load more search results
+        const results = await searchBooks(query, nextPage, 'pt-BR');
         const newBooks = results.items.filter(
           newBook => !books.some(existingBook => existingBook.id === newBook.id)
         );
@@ -242,8 +268,6 @@ export default function TabTwoScreen() {
         setBooks(prevBooks => [...prevBooks, ...newBooks]);
         setCurrentPage(nextPage);
         setHasMore(results.items.length === 20);
-      } else {
-        setHasMore(false);
       }
     } catch (err) {
       console.error('Error loading more books:', err);
@@ -259,7 +283,7 @@ export default function TabTwoScreen() {
     setHasMore(true);
 
     if (genre === 'all') {
-      setBooks(INITIAL_BOOKS);
+      fetchPopularBooks();
       return;
     }
 
