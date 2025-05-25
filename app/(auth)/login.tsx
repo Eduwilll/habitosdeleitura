@@ -1,7 +1,7 @@
 import * as FileSystem from 'expo-file-system';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { Alert, TextInput, TouchableOpacity } from 'react-native';
+import React, { useEffect } from 'react';
+import { ActivityIndicator, Alert, TextInput, TouchableOpacity } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -21,14 +21,21 @@ const deleteDatabase = async () => {
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { login } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const { login, isAuthenticated, isLoading } = useAuth();
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
 
   // // use to delete the database SQLite
   // useEffect(() => {
   //   deleteDatabase();
   // }, []);
+
+  // Navigate to tabs if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && !isLoading) {
+      router.replace('/(tabs)');
+    }
+  }, [isAuthenticated, isLoading]);
 
   const handleLogin = () => {
     if (!email || !password) {
@@ -41,11 +48,19 @@ export default function LoginScreen() {
         Alert.alert('Erro ao fazer login', err.message);
         console.log(err);
       } else {
-        Alert.alert('Sucesso', 'Login realizado com sucesso!');
-        router.push('/(tabs)');
+        router.replace('/(tabs)');
       }
     });
   };
+
+  if (isLoading) {
+    return (
+      <ThemedView style={[globalStyles.authContainer, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#007AFF" />
+        <ThemedText style={{ marginTop: 20 }}>Carregando...</ThemedText>
+      </ThemedView>
+    );
+  }
 
   return (
     <ThemedView style={globalStyles.authContainer}>
