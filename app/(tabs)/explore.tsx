@@ -1,9 +1,8 @@
 import { FontAwesome } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useRef, useState } from 'react';
 import { ActivityIndicator, Dimensions, FlatList, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
-import { useDebounce } from '../../hooks/useDebounce';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -106,9 +105,85 @@ const GenreButton = memo(({
   </TouchableOpacity>
 ));
 
+const SearchBar = memo(({ 
+  onSearch 
+}: { 
+  onSearch: (text: string) => void;
+}) => {
+  const [inputText, setInputText] = useState('');
+  const searchTimeout = useRef<ReturnType<typeof setTimeout>>();
+  const inputRef = useRef<TextInput>(null);
+
+  const handleTextChange = useCallback((text: string) => {
+    setInputText(text);
+    
+    // Clear any existing timeout
+    if (searchTimeout.current) {
+      clearTimeout(searchTimeout.current);
+    }
+
+    // Only search if text is at least 3 characters or empty
+    if (text.length >= 3 || text.length === 0) {
+      searchTimeout.current = setTimeout(() => {
+        onSearch(text);
+      }, 300);
+    }
+  }, [onSearch]);
+
+  const handleClear = useCallback(() => {
+    setInputText('');
+    onSearch('');
+    // Focus the input after clearing
+    requestAnimationFrame(() => {
+      inputRef.current?.focus();
+    });
+  }, [onSearch]);
+
+  const handleSubmit = useCallback(() => {
+    if (inputText.length > 0) {
+      onSearch(inputText);
+    }
+  }, [inputText, onSearch]);
+
+  return (
+    <ThemedView style={styles.searchBarContainer}>
+      <ThemedView style={styles.searchContainer}>
+        <FontAwesome name="search" size={20} color="#8E8E93" style={styles.searchIcon} />
+        <TextInput
+          ref={inputRef}
+          style={styles.searchInput}
+          placeholder="Pesquisar por livros..."
+          value={inputText}
+          onChangeText={handleTextChange}
+          onSubmitEditing={handleSubmit}
+          placeholderTextColor="#8E8E93"
+          returnKeyType="search"
+          autoCapitalize="none"
+          autoCorrect={false}
+          blurOnSubmit={false}
+          selectTextOnFocus={true}
+          keyboardType="default"
+        />
+        {inputText.length > 0 && (
+          <TouchableOpacity 
+            style={styles.clearButton}
+            onPress={handleClear}
+          >
+            <FontAwesome name="times-circle" size={20} color="#8E8E93" />
+          </TouchableOpacity>
+        )}
+      </ThemedView>
+      {inputText.length > 0 && inputText.length < 3 && (
+        <ThemedText style={styles.searchHint}>
+          Digite pelo menos 3 caracteres para buscar
+        </ThemedText>
+      )}
+    </ThemedView>
+  );
+});
+
 export default function TabTwoScreen() {
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState('');
   const [books, setBooks] = useState<Book[]>(INITIAL_BOOKS);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -116,8 +191,9 @@ export default function TabTwoScreen() {
   const [hasMore, setHasMore] = useState(true);
   const [selectedGenre, setSelectedGenre] = useState<string>('all');
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const debouncedSearch = useDebounce(async (query: string) => {
+  const performSearch = useCallback(async (query: string) => {
     if (!query.trim()) {
       setBooks(INITIAL_BOOKS);
       setCurrentPage(1);
@@ -131,28 +207,33 @@ export default function TabTwoScreen() {
       const results = await searchBooks(query, 1, 'pt-BR');
       setBooks(results.items);
       setHasMore(results.items.length === 20);
+      setCurrentPage(1);
     } catch (err) {
       setError('Falha ao buscar livros. Por favor, tente novamente.');
       console.error(err);
     } finally {
       setLoading(false);
     }
-  }, 500);
+  }, []);
+
+  const handleSearch = useCallback((text: string) => {
+    setSearchQuery(text);
+    performSearch(text);
+  }, [performSearch]);
 
   const loadMoreBooks = async () => {
-    if (loading || isLoadingMore || !hasMore) return;
+    if (loading || isLoadingMore || !hasMore || !searchQuery.trim()) return;
 
     try {
       setIsLoadingMore(true);
       const nextPage = currentPage + 1;
       const results = await searchBooks(
-        searchQuery || selectedGenre,
+        searchQuery,
         nextPage,
         'pt-BR'
       );
       
       if (results.items.length > 0) {
-        // Filter out duplicate books by ID
         const newBooks = results.items.filter(
           newBook => !books.some(existingBook => existingBook.id === newBook.id)
         );
@@ -169,11 +250,6 @@ export default function TabTwoScreen() {
       setIsLoadingMore(false);
     }
   };
-
-  const handleSearch = useCallback((text: string) => {
-    setSearchQuery(text);
-    debouncedSearch(text);
-  }, [debouncedSearch]);
 
   const handleGenreSelect = async (genre: string) => {
     setSelectedGenre(genre);
@@ -211,16 +287,6 @@ export default function TabTwoScreen() {
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">Explore Books</ThemedText>
       </ThemedView>
-      <ThemedView style={styles.searchContainer}>
-        <FontAwesome name="search" size={20} color="#8E8E93" style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Pesquisar por livros..."
-          value={searchQuery}
-          onChangeText={handleSearch}
-          placeholderTextColor="#8E8E93"
-        />
-      </ThemedView>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -242,7 +308,7 @@ export default function TabTwoScreen() {
         ))}
       </ScrollView>
     </ThemedView>
-  ), [searchQuery, selectedGenre, handleSearch, handleGenreSelect]);
+  ), [selectedGenre, handleGenreSelect]);
 
   const renderBookItem = useCallback(({ item }: { item: Book }) => (
     <BookItem item={item} onPress={handleBookPress} />
@@ -261,6 +327,7 @@ export default function TabTwoScreen() {
 
   return (
     <View style={styles.container}>
+      <SearchBar onSearch={handleSearch} />
       <FlatList
         data={books}
         renderItem={renderBookItem}
@@ -278,6 +345,7 @@ export default function TabTwoScreen() {
         windowSize={5}
         initialNumToRender={10}
         extraData={[loading, isLoadingMore]}
+        keyboardShouldPersistTaps="handled"
       />
     </View>
   );
@@ -291,9 +359,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
+  searchBarContainer: {
+    paddingTop: Platform.OS === 'ios' ? 50 : 20,
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
   header: {
     backgroundColor: '#fff',
-    paddingTop: Platform.OS === 'ios' ? 50 : 20,
     paddingBottom: 16,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
@@ -319,6 +394,10 @@ const styles = StyleSheet.create({
     height: '100%',
     fontSize: 16,
     color: '#000',
+  },
+  clearButton: {
+    padding: 4,
+    marginLeft: 8,
   },
   genresContainer: {
     marginBottom: 16,
@@ -392,5 +471,12 @@ const styles = StyleSheet.create({
   loadingContainer: {
     padding: 20,
     alignItems: 'center',
+  },
+  searchHint: {
+    color: '#8E8E93',
+    fontSize: 12,
+    marginTop: -12,
+    marginBottom: 8,
+    marginLeft: 12,
   },
 });
