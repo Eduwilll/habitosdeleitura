@@ -21,6 +21,7 @@ interface BookRow {
 interface ReminderRow {
   id: string;
   bookId: string;
+  bookTitle: string;
   time: string;
   daysOfWeek: string;
   isEnabled: number;
@@ -82,6 +83,7 @@ export const createTables = () => {
       CREATE TABLE IF NOT EXISTS reminders (
         id TEXT PRIMARY KEY,
         bookId TEXT NOT NULL,
+        bookTitle TEXT NOT NULL,
         time TEXT NOT NULL,
         daysOfWeek TEXT NOT NULL,
         isEnabled INTEGER DEFAULT 1,
@@ -241,7 +243,7 @@ export const getLibraryBooks = (callback: (error: Error | null, books?: Book[]) 
 
     database.getAllAsync<BookRow>(sql)
       .then(results => {
-        console.log('Raw database results:', results);
+        // console.log('Raw database results:', results);
         
         const books = results.map(row => {
           try {
@@ -257,7 +259,7 @@ export const getLibraryBooks = (callback: (error: Error | null, books?: Book[]) 
               averageRating: row.averageRating || undefined,
               status: row.status as 'reading' | 'completed' | 'to-read'
             };
-            console.log('Parsed book:', book);
+            // console.log('Parsed book:', book);
             return book;
           } catch (parseError) {
             console.error('Error parsing book row:', row, parseError);
@@ -265,7 +267,7 @@ export const getLibraryBooks = (callback: (error: Error | null, books?: Book[]) 
           }
         }).filter((book): book is Book => book !== null);
 
-        console.log('Final parsed books:', books);
+        // console.log('Final parsed books:', books);
         callback(null, books);
       })
       .catch(err => {
@@ -318,6 +320,7 @@ export const removeBookFromLibrary = (bookId: string, callback: (error: Error | 
 
 export const addReadingReminder = (
   bookId: string,
+  bookTitle: string,
   time: string,
   daysOfWeek: number[],
   callback: (error: Error | null, result?: any) => void
@@ -328,8 +331,8 @@ export const addReadingReminder = (
     const daysOfWeekStr = JSON.stringify(daysOfWeek);
     
     const sql = `
-      INSERT INTO reminders (id, bookId, time, daysOfWeek, isEnabled)
-      VALUES ('${reminderId}', '${bookId}', '${time}', '${daysOfWeekStr}', 1)
+      INSERT INTO reminders (id, bookId, bookTitle, time, daysOfWeek, isEnabled)
+      VALUES ('${reminderId}', '${bookId}', '${bookTitle.replace(/'/g, "''")}', '${time}', '${daysOfWeekStr}', 1)
     `;
 
     database.execAsync(sql)

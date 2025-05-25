@@ -2,6 +2,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { addReadingReminder, deleteReminder, getBookReminders, getLibraryBooks, removeBookFromLibrary, updateBookStatus } from '@/services/db';
 import { Book } from '@/services/googleBooks';
+import { cancelReadingReminder, requestNotificationPermissions, scheduleReadingReminder } from '@/services/notifications';
 import { FontAwesome } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useFocusEffect } from '@react-navigation/native';
@@ -130,7 +131,7 @@ export default function LibraryScreen() {
     );
   };
 
-  const handleAddReminder = () => {
+  const handleAddReminder = async () => {
     if (!currentBook) return;
     
     if (selectedDays.length === 0) {
@@ -144,19 +145,42 @@ export default function LibraryScreen() {
       minute: '2-digit'
     });
 
-    addReadingReminder(currentBook.id, timeString, selectedDays, (error) => {
-      if (error) {
-        Alert.alert('Erro', 'Falha ao adicionar lembrete');
-        console.error('Error adding reminder:', error);
-      } else {
-        Alert.alert('Sucesso', 'Lembrete adicionado com sucesso');
-        loadBookReminders(currentBook.id);
-        setIsReminderModalOpen(false);
+    // First, add the reminder to the database
+    addReadingReminder(
+      currentBook.id,
+      currentBook.title,
+      timeString,
+      selectedDays,
+      async (error) => {
+        if (error) {
+          Alert.alert('Erro', 'Falha ao adicionar lembrete');
+          console.error('Error adding reminder:', error);
+        } else {
+          // Then, schedule the notification
+          const success = await scheduleReadingReminder(
+            `reminder_${Date.now()}`,
+            currentBook.title,
+            timeString,
+            selectedDays
+          );
+
+          if (success) {
+            Alert.alert('Sucesso', 'Lembrete adicionado com sucesso');
+            loadBookReminders(currentBook.id);
+            setIsReminderModalOpen(false);
+          } else {
+            Alert.alert('Erro', 'Falha ao agendar notificação');
+          }
+        }
       }
-    });
+    );
   };
 
-  const handleDeleteReminder = (reminderId: string) => {
+  const handleDeleteReminder = async (reminderId: string) => {
+    // First, cancel the notification
+    await cancelReadingReminder(reminderId);
+
+    // Then, remove from database
     deleteReminder(reminderId, (error) => {
       if (error) {
         Alert.alert('Erro', 'Falha ao remover lembrete');
@@ -201,6 +225,11 @@ export default function LibraryScreen() {
       });
     }
   }, [currentBook]);
+
+  useEffect(() => {
+    // Request notification permissions when the app starts
+    requestNotificationPermissions();
+  }, []);
 
   return (
     <View style={styles.container}>
