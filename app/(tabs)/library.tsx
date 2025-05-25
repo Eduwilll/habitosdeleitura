@@ -1,8 +1,9 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { getLibraryBooks, removeBookFromLibrary, updateBookStatus } from '@/services/db';
+import { addReadingReminder, deleteReminder, getBookReminders, getLibraryBooks, removeBookFromLibrary, updateBookStatus } from '@/services/db';
 import { Book } from '@/services/googleBooks';
 import { FontAwesome } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useFocusEffect } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -19,6 +20,11 @@ export default function LibraryScreen() {
   const [currentBook, setCurrentBook] = useState<Book | null>(null);
   const [loading, setLoading] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isReminderModalOpen, setIsReminderModalOpen] = useState(false);
+  const [selectedTime, setSelectedTime] = useState(new Date());
+  const [selectedDays, setSelectedDays] = useState<number[]>([]);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [reminders, setReminders] = useState<any[]>([]);
 
   const loadLibraryBooks = useCallback(() => {
     setLoading(true);
@@ -30,6 +36,16 @@ export default function LibraryScreen() {
         setBooks(books);
       }
       setLoading(false);
+    });
+  }, []);
+
+  const loadBookReminders = useCallback((bookId: string) => {
+    getBookReminders(bookId, (error, reminders) => {
+      if (error) {
+        console.error('Error loading reminders:', error);
+      } else if (reminders) {
+        setReminders(reminders);
+      }
     });
   }, []);
 
@@ -114,13 +130,55 @@ export default function LibraryScreen() {
     );
   };
 
+  const handleAddReminder = () => {
+    if (!currentBook) return;
+    
+    if (selectedDays.length === 0) {
+      Alert.alert('Erro', 'Selecione pelo menos um dia da semana');
+      return;
+    }
+
+    const timeString = selectedTime.toLocaleTimeString('en-US', {
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    addReadingReminder(currentBook.id, timeString, selectedDays, (error) => {
+      if (error) {
+        Alert.alert('Erro', 'Falha ao adicionar lembrete');
+        console.error('Error adding reminder:', error);
+      } else {
+        Alert.alert('Sucesso', 'Lembrete adicionado com sucesso');
+        loadBookReminders(currentBook.id);
+        setIsReminderModalOpen(false);
+      }
+    });
+  };
+
+  const handleDeleteReminder = (reminderId: string) => {
+    deleteReminder(reminderId, (error) => {
+      if (error) {
+        Alert.alert('Erro', 'Falha ao remover lembrete');
+        console.error('Error deleting reminder:', error);
+      } else {
+        loadBookReminders(currentBook!.id);
+      }
+    });
+  };
+
+  const toggleDay = (day: number) => {
+    setSelectedDays(prev => 
+      prev.includes(day)
+        ? prev.filter(d => d !== day)
+        : [...prev, day]
+    );
+  };
+
   const openBook = async (book: Book) => {
     setCurrentBook(book);
     setIsReaderOpen(true);
-    //Quando acionado o livro é atribuido para 'reading'
-    // if (book.status === 'to-read') {
-    //   handleStatusChange(book.id, 'reading');
-    // }
+    loadBookReminders(book.id);
   };
 
   const closeReader = () => {
@@ -376,6 +434,42 @@ export default function LibraryScreen() {
               </TouchableOpacity>
             </View>
 
+            {/* Reminders Section */}
+            <View style={styles.remindersSection}>
+              <View style={styles.remindersHeader}>
+                <ThemedText style={styles.remindersTitle}>Lembretes de Leitura</ThemedText>
+                <TouchableOpacity
+                  style={styles.addReminderButton}
+                  onPress={() => setIsReminderModalOpen(true)}
+                >
+                  <FontAwesome name="plus" size={16} color="#007AFF" />
+                  <ThemedText style={styles.addReminderText}>Adicionar Lembrete</ThemedText>
+                </TouchableOpacity>
+              </View>
+
+              {reminders.map(reminder => (
+                <View key={reminder.id} style={styles.reminderItem}>
+                  <View style={styles.reminderInfo}>
+                    <ThemedText style={styles.reminderTime}>
+                      {reminder.time}
+                    </ThemedText>
+                    <ThemedText style={styles.reminderDays}>
+                      {JSON.parse(reminder.daysOfWeek).map((day: number) => {
+                        const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+                        return days[day];
+                      }).join(', ')}
+                    </ThemedText>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => handleDeleteReminder(reminder.id)}
+                    style={styles.deleteReminderButton}
+                  >
+                    <FontAwesome name="trash" size={16} color="#FF3B30" />
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+
             {/* Book Description */}
             {currentBook?.description ? (
               <View style={styles.descriptionContainer}>
@@ -391,6 +485,84 @@ export default function LibraryScreen() {
           </View>
             )}
           </ScrollView>
+        </View>
+      </Modal>
+
+      {/* Reminder Setup Modal */}
+      <Modal
+        visible={isReminderModalOpen}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setIsReminderModalOpen(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <ThemedText style={styles.modalTitle}>Novo Lembrete</ThemedText>
+              <TouchableOpacity
+                onPress={() => setIsReminderModalOpen(false)}
+                style={styles.closeModalButton}
+              >
+                <FontAwesome name="times" size={20} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              style={styles.timePickerButton}
+              onPress={() => setShowTimePicker(true)}
+            >
+              <ThemedText style={styles.timePickerText}>
+                {selectedTime.toLocaleTimeString('pt-BR', {
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </ThemedText>
+            </TouchableOpacity>
+
+            {showTimePicker && (
+              <DateTimePicker
+                value={selectedTime}
+                mode="time"
+                is24Hour={true}
+                display="default"
+                onChange={(event, selectedDate) => {
+                  setShowTimePicker(false);
+                  if (selectedDate) {
+                    setSelectedTime(selectedDate);
+                  }
+                }}
+              />
+            )}
+
+            <View style={styles.daysContainer}>
+              {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((day, index) => (
+                <TouchableOpacity
+                  key={day}
+                  style={[
+                    styles.dayButton,
+                    selectedDays.includes(index) && styles.selectedDayButton
+                  ]}
+                  onPress={() => toggleDay(index)}
+                >
+                  <ThemedText
+                    style={[
+                      styles.dayButtonText,
+                      selectedDays.includes(index) && styles.selectedDayButtonText
+                    ]}
+                  >
+                    {day}
+                  </ThemedText>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <TouchableOpacity
+              style={styles.saveReminderButton}
+              onPress={handleAddReminder}
+            >
+              <ThemedText style={styles.saveReminderText}>Salvar Lembrete</ThemedText>
+            </TouchableOpacity>
+          </View>
         </View>
       </Modal>
     </View>
@@ -638,5 +810,125 @@ const styles = StyleSheet.create({
   },
   statusButtonTextActive: {
     color: '#fff',
+  },
+  remindersSection: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  remindersHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  remindersTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  addReminderButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+  },
+  addReminderText: {
+    color: '#007AFF',
+    marginLeft: 8,
+  },
+  reminderItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  reminderInfo: {
+    flex: 1,
+  },
+  reminderTime: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  reminderDays: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
+  },
+  deleteReminderButton: {
+    padding: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+    width: '90%',
+    maxWidth: 400,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  closeModalButton: {
+    padding: 8,
+  },
+  timePickerButton: {
+    backgroundColor: '#f5f5f5',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  timePickerText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  daysContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  dayButton: {
+    width: '13%',
+    aspectRatio: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 20,
+    backgroundColor: '#f5f5f5',
+    marginBottom: 8,
+  },
+  selectedDayButton: {
+    backgroundColor: '#007AFF',
+  },
+  dayButtonText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  selectedDayButtonText: {
+    color: '#fff',
+  },
+  saveReminderButton: {
+    backgroundColor: '#007AFF',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  saveReminderText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });

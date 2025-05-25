@@ -18,6 +18,14 @@ interface BookRow {
   dateAdded: string;
 }
 
+interface ReminderRow {
+  id: string;
+  bookId: string;
+  time: string;
+  daysOfWeek: string;
+  isEnabled: number;
+}
+
 const getDatabase = () => {
   if (!db) {
     try {
@@ -68,6 +76,19 @@ export const createTables = () => {
       );
     `).then(() => console.log('Books table created successfully'))
       .catch(err => console.error('Error creating books table:', err));
+
+    // Create reminders table
+    database.execAsync(`
+      CREATE TABLE IF NOT EXISTS reminders (
+        id TEXT PRIMARY KEY,
+        bookId TEXT NOT NULL,
+        time TEXT NOT NULL,
+        daysOfWeek TEXT NOT NULL,
+        isEnabled INTEGER DEFAULT 1,
+        FOREIGN KEY (bookId) REFERENCES books(id) ON DELETE CASCADE
+      );
+    `).then(() => console.log('Reminders table created successfully'))
+      .catch(err => console.error('Error creating reminders table:', err));
   } catch (error) {
     console.error('Error in createTables:', error);
   }
@@ -291,6 +312,117 @@ export const removeBookFromLibrary = (bookId: string, callback: (error: Error | 
       });
   } catch (error) {
     console.error('Error in removeBookFromLibrary:', error);
+    callback(error instanceof Error ? error : new Error('Database error'));
+  }
+};
+
+export const addReadingReminder = (
+  bookId: string,
+  time: string,
+  daysOfWeek: number[],
+  callback: (error: Error | null, result?: any) => void
+) => {
+  try {
+    const database = getDatabase();
+    const reminderId = `reminder_${Date.now()}`;
+    const daysOfWeekStr = JSON.stringify(daysOfWeek);
+    
+    const sql = `
+      INSERT INTO reminders (id, bookId, time, daysOfWeek, isEnabled)
+      VALUES ('${reminderId}', '${bookId}', '${time}', '${daysOfWeekStr}', 1)
+    `;
+
+    database.execAsync(sql)
+      .then(resultSet => {
+        console.log('Reminder added successfully:', resultSet);
+        callback(null, resultSet);
+      })
+      .catch(err => {
+        console.error('Error adding reminder:', err);
+        callback(err);
+      });
+  } catch (error) {
+    console.error('Error in addReadingReminder:', error);
+    callback(error instanceof Error ? error : new Error('Database error'));
+  }
+};
+
+export const getBookReminders = (
+  bookId: string,
+  callback: (error: Error | null, reminders?: ReminderRow[]) => void
+) => {
+  try {
+    const database = getDatabase();
+    const sql = `SELECT * FROM reminders WHERE bookId = '${bookId}'`;
+
+    database.getAllAsync<ReminderRow>(sql)
+      .then(results => {
+        console.log('Reminders retrieved:', results);
+        callback(null, results);
+      })
+      .catch(err => {
+        console.error('Error getting reminders:', err);
+        callback(err);
+      });
+  } catch (error) {
+    console.error('Error in getBookReminders:', error);
+    callback(error instanceof Error ? error : new Error('Database error'));
+  }
+};
+
+export const updateReminder = (
+  reminderId: string,
+  time: string,
+  daysOfWeek: number[],
+  isEnabled: boolean,
+  callback: (error: Error | null, result?: any) => void
+) => {
+  try {
+    const database = getDatabase();
+    const daysOfWeekStr = JSON.stringify(daysOfWeek);
+    
+    const sql = `
+      UPDATE reminders 
+      SET time = '${time}', 
+          daysOfWeek = '${daysOfWeekStr}', 
+          isEnabled = ${isEnabled ? 1 : 0}
+      WHERE id = '${reminderId}'
+    `;
+
+    database.execAsync(sql)
+      .then(resultSet => {
+        console.log('Reminder updated successfully:', resultSet);
+        callback(null, resultSet);
+      })
+      .catch(err => {
+        console.error('Error updating reminder:', err);
+        callback(err);
+      });
+  } catch (error) {
+    console.error('Error in updateReminder:', error);
+    callback(error instanceof Error ? error : new Error('Database error'));
+  }
+};
+
+export const deleteReminder = (
+  reminderId: string,
+  callback: (error: Error | null, result?: any) => void
+) => {
+  try {
+    const database = getDatabase();
+    const sql = `DELETE FROM reminders WHERE id = '${reminderId}'`;
+
+    database.execAsync(sql)
+      .then(resultSet => {
+        console.log('Reminder deleted successfully:', resultSet);
+        callback(null, resultSet);
+      })
+      .catch(err => {
+        console.error('Error deleting reminder:', err);
+        callback(err);
+      });
+  } catch (error) {
+    console.error('Error in deleteReminder:', error);
     callback(error instanceof Error ? error : new Error('Database error'));
   }
 }; 
