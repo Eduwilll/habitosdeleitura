@@ -4,9 +4,15 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
 const fs = require('fs');
+const http = require('http');
+const setupWebSocket = require('./websocket');
 
 const app = express();
+const server = http.createServer(app);
 const port = 3000;
+
+// Setup WebSocket
+const { broadcastUpdate } = setupWebSocket(server);
 
 // Middleware
 app.use(cors());
@@ -14,7 +20,7 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Database connection
-const dbPath = path.join(__dirname, '..', 'data', 'test.db');
+const dbPath = path.join(__dirname, '..', 'data', 'habitosdeleitura.db');
 
 // Check if database exists
 if (!fs.existsSync(dbPath)) {
@@ -68,7 +74,9 @@ app.post('/api/table/:tableName', (req, res) => {
       res.status(500).json({ error: err.message });
       return;
     }
-    res.json({ id: this.lastID });
+    const newRow = { id: this.lastID, ...data };
+    broadcastUpdate(tableName, 'insert', newRow);
+    res.json(newRow);
   });
 });
 
@@ -89,6 +97,8 @@ app.put('/api/table/:tableName/:id', (req, res) => {
       res.status(500).json({ error: err.message });
       return;
     }
+    const updatedRow = { id, ...data };
+    broadcastUpdate(tableName, 'update', updatedRow);
     res.json({ changes: this.changes });
   });
 });
@@ -102,6 +112,7 @@ app.delete('/api/table/:tableName/:id', (req, res) => {
       res.status(500).json({ error: err.message });
       return;
     }
+    broadcastUpdate(tableName, 'delete', { id });
     res.json({ changes: this.changes });
   });
 });
@@ -111,6 +122,7 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.listen(port, () => {
+// Start server
+server.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 }); 
