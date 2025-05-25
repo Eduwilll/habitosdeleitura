@@ -1,50 +1,155 @@
-# Welcome to your Expo app 👋
+# Hábitos de Leitura 📚
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Um aplicativo React Native para ajudar você a desenvolver e manter hábitos de leitura saudáveis. O aplicativo permite explorar livros, gerenciar sua biblioteca pessoal, acompanhar seu progresso de leitura e receber lembretes personalizados.
 
-## Get started
+## ✨ Funcionalidades
 
-1. Install dependencies
+- **Exploração de Livros**
+  - Descubra livros populares no Brasil
+  - Busca por título, autor ou gênero
+  - Visualização detalhada de informações do livro
+  - Categorização por gêneros literários
 
-   ```bash
-   npm install
-   ```
+- **Biblioteca Pessoal**
+  - Adicione livros à sua biblioteca
+  - Organize por status (Lendo, Concluído, Para Ler)
+  - Acompanhe seu progresso de leitura
+  - Visualize estatísticas de leitura
 
-2. Start the app
+- **Lembretes de Leitura**
+  - Configure lembretes personalizados
+  - Escolha dias e horários específicos
+  - Notificações para manter o hábito
 
-   ```bash
-   npx expo start
-   ```
+- **Perfil do Usuário**
+  - Gerenciamento de conta
+  - Estatísticas de leitura
+  - Personalização de preferências
 
-In the output, you'll find options to open the app in a
+## 🚀 Tecnologias Utilizadas
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- React Native
+- Expo
+- TypeScript
+- SQLite (armazenamento local)
+- Google Books API
+- Expo Notifications
+- Expo Router
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## 📋 Pré-requisitos
 
-## Get a fresh project
+- Node.js (versão LTS recomendada)
+- npm ou yarn
+- Expo CLI
+- Android Studio (para desenvolvimento Android)
+- Xcode (para desenvolvimento iOS, apenas macOS)
 
-When you're ready, run:
+## 🔧 Instalação
 
+1. Clone o repositório:
 ```bash
-npm run reset-project
+git clone https://github.com/Eduwilll/habitosdeleitura.git
+cd habitosdeleitura
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+2. Instale as dependências:
+```bash
+npm install
+# ou
+yarn install
+```
 
-## Learn more
+3. Configure as variáveis de ambiente:
+   - Crie um arquivo `.env` na raiz do projeto
+   - Adicione sua chave da API do Google Books:
+   ```
+   GOOGLE_BOOKS_API_KEY=sua_chave_aqui
+   ```
 
-To learn more about developing your project with Expo, look at the following resources:
+4. Inicie o projeto:
+```bash
+npm start
+# ou
+yarn start
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## 📱 Executando o Aplicativo
 
-## Join the community
+### Android
+```bash
+npm run android
+# ou
+yarn android
+```
 
-Join our community of developers creating universal apps.
+### iOS
+```bash
+npm run ios
+# ou
+yarn ios
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## 🛠️ Scripts Disponíveis
+
+- `npm start` - Inicia o servidor de desenvolvimento
+- `npm run android` - Executa o aplicativo no Android
+- `npm run ios` - Executa o aplicativo no iOS
+- `npm run web` - Executa o aplicativo na web
+- `npm run lint` - Executa a verificação de código
+- `npm run reset-project` - Reseta o projeto para o estado inicial
+
+## 📦 Estrutura do Projeto
+
+```
+habitosdeleitura/
+├── .expo/                  # Configurações do Expo
+├── .vscode/               # Configurações do VS Code
+├── app/                   # Rotas e telas do aplicativo
+│   ├── (auth)/           # Telas de autenticação
+│   ├── (tabs)/           # Telas principais
+│   └── book-details.tsx  # Tela de detalhes do livro
+├── assets/               # Recursos estáticos (imagens, fontes, etc.)
+├── components/           # Componentes reutilizáveis
+├── constants/           # Constantes e configurações
+├── contexts/            # Contextos do React
+├── db-viewer-server/    # Servidor para visualização do banco de dados
+├── hooks/               # Custom hooks do React
+├── node_modules/        # Dependências do projeto
+├── scripts/             # Scripts utilitários
+├── services/            # Serviços e APIs
+├── styles/              # Estilos globais
+├── .gitignore          # Configuração do Git
+├── app.json            # Configuração do Expo
+├── copy-db.js          # Script para cópia do banco de dados
+├── eas.json            # Configuração do EAS Build
+├── eslint.config.js    # Configuração do ESLint
+├── expo-env.d.ts       # Definições de tipos do Expo
+├── package.json        # Dependências e scripts do projeto
+├── tsconfig.json       # Configuração do TypeScript
+└── README.md           # Documentação do projeto
+```
+
+## 🤝 Contribuindo
+
+1. Faça um fork do projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request
+
+## 📄 Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+## 📞 Suporte
+
+Para suporte, envie um email ou abra uma issue no GitHub.
+
+## 🙏 Agradecimentos
+
+- Google Books API por fornecer dados de livros
+- Comunidade Expo por suas ferramentas incríveis
+- Todos os contribuidores do projeto
+
+---
+Desenvolvido com ❤️ para incentivar a leitura no Brasil
