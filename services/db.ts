@@ -1,3 +1,4 @@
+import * as FileSystem from 'expo-file-system';
 import { openDatabaseSync, SQLiteDatabase } from 'expo-sqlite';
 import { Book } from './googleBooks';
 
@@ -23,6 +24,9 @@ const getDatabase = () => {
       console.log('Opening database...');
       db = openDatabaseSync('habitosdeleitura.db');
       console.log('Database opened successfully');
+
+      // Add this to your app where you initialize the database
+      console.log('Database path:', FileSystem.documentDirectory + 'SQLite/habitosdeleitura.db');
     } catch (error) {
       console.error('Error opening database:', error);
       throw error;
