@@ -49,15 +49,16 @@ export const scheduleReadingReminder = async (
       const scheduledTime = new Date(now);
       scheduledTime.setHours(hours, minutes, 0, 0);
 
+      // Calculate the next occurrence of this day and time
+      const currentDay = now.getDay();
+      let daysUntilNext = (day - currentDay + 7) % 7;
+      
       // If the time has already passed today, schedule for next week
-      if (scheduledTime <= now) {
-        scheduledTime.setDate(scheduledTime.getDate() + 7);
+      if (daysUntilNext === 0 && scheduledTime <= now) {
+        daysUntilNext = 7;
       }
 
-      // Adjust the day of the week
-      const currentDay = scheduledTime.getDay();
-      const daysToAdd = (day - currentDay + 7) % 7;
-      scheduledTime.setDate(scheduledTime.getDate() + daysToAdd);
+      scheduledTime.setDate(scheduledTime.getDate() + daysUntilNext);
 
       // Schedule the notification
       await Notifications.scheduleNotificationAsync({
@@ -67,13 +68,15 @@ export const scheduleReadingReminder = async (
           data: { reminderId, bookTitle },
         },
         trigger: {
-          hour: hours,
-          minute: minutes,
-          weekday: day + 1, // Expo uses 1-7 for weekdays (Sunday is 1)
+          type: 'date',
+          date: scheduledTime,
           repeats: true,
+          interval: 7 * 24 * 60 * 60, // Repeat every 7 days in seconds
         } as Notifications.NotificationTriggerInput,
         identifier: `${reminderId}_${day}`,
       });
+
+      console.log(`Scheduled notification for ${bookTitle} at ${scheduledTime.toLocaleString()}`);
     }
 
     return true;
