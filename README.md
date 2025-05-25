@@ -53,8 +53,8 @@ cd habitosdeleitura
 ```
 
 2. Instale as dependências:
-```bash
-npm install
+   ```bash
+   npm install
 # ou
 yarn install
 ```
@@ -67,7 +67,7 @@ yarn install
    ```
 
 4. Inicie o projeto:
-```bash
+   ```bash
 npm start
 # ou
 yarn start
