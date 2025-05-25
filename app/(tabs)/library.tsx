@@ -1,5 +1,6 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { strings } from '@/constants/strings';
 import { addReadingReminder, deleteReminder, getBookReminders, getLibraryBooks, removeBookFromLibrary, updateBookStatus } from '@/services/db';
 import { Book } from '@/services/googleBooks';
 import { cancelReadingReminder, requestNotificationPermissions, scheduleReadingReminder } from '@/services/notifications';
@@ -31,7 +32,7 @@ export default function LibraryScreen() {
     setLoading(true);
     getLibraryBooks((error, books) => {
       if (error) {
-        Alert.alert('Erro', 'Falha ao carregar livros da biblioteca.');
+        Alert.alert(strings.common.error, strings.library.errorLoadingBooks);
         console.error('Error loading library books:', error);
       } else if (books) {
         setBooks(books);
@@ -98,7 +99,7 @@ export default function LibraryScreen() {
     // Update database in the background
     updateBookStatus(bookId, newStatus, (error) => {
       if (error) {
-        Alert.alert('Erro', 'Falha ao atualizar status do livro.');
+        Alert.alert(strings.common.error, strings.library.errorUpdatingStatus);
         console.error('Error updating book status:', error);
         // Revert changes if update fails
         loadLibraryBooks();
@@ -108,17 +109,17 @@ export default function LibraryScreen() {
 
   const handleRemoveBook = (bookId: string) => {
     Alert.alert(
-      'Remover Livro',
-      'Tem certeza que deseja remover este livro da biblioteca?',
+      strings.library.bookDetails.deleteConfirmTitle,
+      strings.library.bookDetails.deleteConfirmMessage,
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: strings.common.cancel, style: 'cancel' },
         {
-          text: 'Remover',
+          text: strings.common.delete,
           style: 'destructive',
           onPress: () => {
             removeBookFromLibrary(bookId, (error) => {
               if (error) {
-                Alert.alert('Erro', 'Falha ao remover livro da biblioteca.');
+                Alert.alert(strings.common.error, strings.library.errorRemovingBook);
                 console.error('Error removing book:', error);
               } else {
                 closeReader();
@@ -239,7 +240,7 @@ export default function LibraryScreen() {
         <FontAwesome name="search" size={20} color="#8E8E93" style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
-          placeholder="Buscar livros..."
+          placeholder={strings.library.searchPlaceholder}
           value={searchQuery}
           onChangeText={setSearchQuery}
           placeholderTextColor="#8E8E93"
@@ -260,9 +261,10 @@ export default function LibraryScreen() {
               onPress={() => setSelectedStatus(status)}
             >
               <ThemedText style={[styles.filterText, selectedStatus === status && styles.selectedFilterText]}>
-                {status === 'all' ? 'Todos' :
-                 status === 'reading' ? 'Lendo' :
-                 status === 'completed' ? 'Concluídos' : 'Para Ler'}
+                {status === 'all' ? strings.library.filters.all :
+                 status === 'reading' ? strings.library.filters.reading :
+                 status === 'completed' ? strings.library.filters.completed : 
+                 strings.library.filters.toRead}
               </ThemedText>
             </TouchableOpacity>
           ))}
@@ -527,7 +529,7 @@ export default function LibraryScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <ThemedText style={styles.modalTitle}>Novo Lembrete</ThemedText>
+              <ThemedText style={styles.modalTitle}>{strings.reminders.addReminder}</ThemedText>
               <TouchableOpacity
                 onPress={() => setIsReminderModalOpen(false)}
                 style={styles.closeModalButton}
@@ -589,7 +591,7 @@ export default function LibraryScreen() {
               style={styles.saveReminderButton}
               onPress={handleAddReminder}
             >
-              <ThemedText style={styles.saveReminderText}>Salvar Lembrete</ThemedText>
+              <ThemedText style={styles.saveReminderText}>{strings.common.save}</ThemedText>
             </TouchableOpacity>
           </View>
         </View>

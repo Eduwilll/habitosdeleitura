@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { strings } from '@/constants/strings';
 import { globalStyles } from '@/styles/global';
 
 const deleteDatabase = async () => {
@@ -18,6 +19,8 @@ const deleteDatabase = async () => {
     console.log('Banco não encontrado.');
   }
 };
+
+const string = strings.auth.login
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -64,11 +67,11 @@ export default function LoginScreen() {
 
   return (
     <ThemedView style={globalStyles.authContainer}>
-      <ThemedText style={globalStyles.authTitle}>Login</ThemedText>
+      <ThemedText style={globalStyles.authTitle}>{string.title}</ThemedText>
       
       <TextInput
         style={globalStyles.authInput}
-        placeholder="Email"
+        placeholder={string.userPlaceholder}
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
@@ -78,14 +81,14 @@ export default function LoginScreen() {
       
       <TextInput
         style={globalStyles.authInput}
-        placeholder="Password"
+        placeholder={string.passwordPlaceholder}
         value={password}
         onChangeText={setPassword}
         secureTextEntry
       />
       
       <TouchableOpacity style={globalStyles.authButton} onPress={handleLogin}>
-        <ThemedText style={globalStyles.authButtonText}>Login</ThemedText>
+        <ThemedText style={globalStyles.authButtonText}>{string.loginButton}</ThemedText>
       </TouchableOpacity>
       
       <TouchableOpacity 
@@ -93,7 +96,7 @@ export default function LoginScreen() {
         onPress={() => router.push('/register')}
       >
         <ThemedText style={globalStyles.authLinkText}>
-          Don't have an account? Register
+          {string.registerLink}
         </ThemedText>
       </TouchableOpacity>
     </ThemedView>

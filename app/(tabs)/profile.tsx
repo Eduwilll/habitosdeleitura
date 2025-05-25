@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { strings } from '@/constants/strings';
 import { colors } from '@/styles/global';
 
 export default function ProfileScreen() {
@@ -14,15 +15,15 @@ export default function ProfileScreen() {
 
   const handleLogout = async () => {
     Alert.alert(
-      'Sair',
-      'Tem certeza que deseja sair?',
+      strings.profile.logout.confirmTitle,
+      strings.profile.logout.confirmMessage,
       [
         {
-          text: 'Cancelar',
+          text: strings.profile.logout.cancel,
           style: 'cancel',
         },
         {
-          text: 'Sair',
+          text: strings.profile.logout.confirm,
           style: 'destructive',
           onPress: async () => {
             await logout();
@@ -47,12 +48,12 @@ export default function ProfileScreen() {
 
         {/* Profile Sections */}
         <View style={styles.section}>
-          <ThemedText style={styles.sectionTitle}>Informações da Conta</ThemedText>
+          <ThemedText style={styles.sectionTitle}>{strings.profile.accountInfo}</ThemedText>
           
           <View style={styles.infoItem}>
             <FontAwesome name="user" size={20} color={colors.primary} style={styles.infoIcon} />
             <View style={styles.infoContent}>
-              <ThemedText style={styles.infoLabel}>Nome de Usuário</ThemedText>
+              <ThemedText style={styles.infoLabel}>{strings.profile.username}</ThemedText>
               <ThemedText style={styles.infoValue}>{user?.username}</ThemedText>
             </View>
           </View>
@@ -60,7 +61,7 @@ export default function ProfileScreen() {
           <View style={styles.infoItem}>
             <FontAwesome name="envelope" size={20} color={colors.primary} style={styles.infoIcon} />
             <View style={styles.infoContent}>
-              <ThemedText style={styles.infoLabel}>Email</ThemedText>
+              <ThemedText style={styles.infoLabel}>{strings.profile.email}</ThemedText>
               <ThemedText style={styles.infoValue}>{user?.email}</ThemedText>
             </View>
           </View>
@@ -69,7 +70,7 @@ export default function ProfileScreen() {
         {/* Logout Button */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <FontAwesome name="sign-out" size={20} color="#FF3B30" style={styles.logoutIcon} />
-          <ThemedText style={styles.logoutText}>Sair</ThemedText>
+          <ThemedText style={styles.logoutText}>{strings.profile.logout.button}</ThemedText>
         </TouchableOpacity>
       </ScrollView>
     </ThemedView>

@@ -6,6 +6,7 @@ import { ActivityIndicator, Dimensions, FlatList, Platform, ScrollView, StyleShe
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { strings } from '@/constants/strings';
 import { Book, searchBooks } from '@/services/googleBooks';
 
 // Predefined genres for initial loading
@@ -152,7 +153,7 @@ const SearchBar = memo(({
         <TextInput
           ref={inputRef}
           style={styles.searchInput}
-          placeholder="Pesquisar por livros..."
+          placeholder={strings.library.searchPlaceholder}
           value={inputText}
           onChangeText={handleTextChange}
           onSubmitEditing={handleSubmit}
@@ -175,7 +176,7 @@ const SearchBar = memo(({
       </ThemedView>
       {inputText.length > 0 && inputText.length < 3 && (
         <ThemedText style={styles.searchHint}>
-          Digite pelo menos 3 caracteres para buscar
+          {strings.common.search}
         </ThemedText>
       )}
     </ThemedView>
@@ -209,7 +210,7 @@ export default function TabTwoScreen() {
       setHasMore(results.items.length === 20);
       setCurrentPage(1);
     } catch (err) {
-      setError('Falha ao buscar livros. Por favor, tente novamente.');
+      setError(strings.common.error);
       console.error(err);
     } finally {
       setLoading(false);
@@ -268,7 +269,7 @@ export default function TabTwoScreen() {
       setBooks(results.items);
       setHasMore(results.items.length === 20);
     } catch (err) {
-      setError('Falha ao carregar livros do gênero. Por favor, tente novamente.');
+      setError(strings.common.error);
       console.error(err);
     } finally {
       setLoading(false);
@@ -285,7 +286,7 @@ export default function TabTwoScreen() {
   const renderHeader = useCallback(() => (
     <ThemedView style={styles.header}>
       <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Explore Books</ThemedText>
+        <ThemedText type="title">Explore</ThemedText>
       </ThemedView>
       <ScrollView
         horizontal
@@ -319,6 +320,7 @@ export default function TabTwoScreen() {
     return (
       <ThemedView style={styles.loadingContainer}>
         <ActivityIndicator size="small" />
+        <ThemedText style={styles.loadingText}>{strings.common.loading}</ThemedText>
       </ThemedView>
     );
   }, [loading]);
@@ -478,5 +480,8 @@ const styles = StyleSheet.create({
     marginTop: -12,
     marginBottom: 8,
     marginLeft: 12,
+  },
+  loadingText: {
+    marginTop: 8,
   },
 });

@@ -5,7 +5,10 @@ import { createTables, insertUser } from '../../services/db';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { strings } from '@/constants/strings';
 import { colors, globalStyles } from '@/styles/global';
+
+const string = strings.auth.register;
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -26,12 +29,12 @@ export default function RegisterScreen() {
 
   const handleRegister = () => {
     if (!username || !password || !email || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert(strings.common.error, string.errorEmptyFields);
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+      Alert.alert(strings.common.error, string.errorPasswordsDontMatch);
       return;
     }
 
@@ -44,10 +47,10 @@ export default function RegisterScreen() {
 
     insertUser(username, email, password, (err, result) => {
       if (err) {
-        Alert.alert('Erro ao registrar', err.message);
+        Alert.alert(strings.common.error, string.errorRegistrationFailed);
         console.log(err);
       } else {
-        Alert.alert('Sucesso', 'Usuário registrado!');
+        Alert.alert(strings.common.success, 'Usuário registrado!');
         router.push('/login');
       }
     });
@@ -55,11 +58,11 @@ export default function RegisterScreen() {
 
   return (
     <ThemedView style={globalStyles.authContainer}>
-      <ThemedText style={globalStyles.authTitle}>Register</ThemedText>
+      <ThemedText style={globalStyles.authTitle}>{string.title}</ThemedText>
       
       <TextInput
         style={globalStyles.authInput}
-        placeholder="Usuário"
+        placeholder={string.usernamePlaceholder}
         value={username}
         onChangeText={setUsername}
       />
@@ -69,7 +72,7 @@ export default function RegisterScreen() {
           globalStyles.authInput,
           emailError ? { borderColor: colors.danger } : {}
         ]}
-        placeholder="Email"
+        placeholder={string.emailPlaceholder}
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
@@ -84,7 +87,7 @@ export default function RegisterScreen() {
       
       <TextInput
         style={globalStyles.authInput}
-        placeholder="Password"
+        placeholder={string.passwordPlaceholder}
         value={password}
         onChangeText={setPassword}
         secureTextEntry
@@ -92,14 +95,14 @@ export default function RegisterScreen() {
 
       <TextInput
         style={globalStyles.authInput}
-        placeholder="Confirm Password"
+        placeholder={string.confirmPasswordPlaceholder}
         value={confirmPassword}
         onChangeText={setConfirmPassword}
         secureTextEntry
       />
       
       <TouchableOpacity style={globalStyles.authButton} onPress={handleRegister}>
-        <ThemedText style={globalStyles.authButtonText}>Register</ThemedText>
+        <ThemedText style={globalStyles.authButtonText}>{string.registerButton}</ThemedText>
       </TouchableOpacity>
       
       <TouchableOpacity 
@@ -107,9 +110,9 @@ export default function RegisterScreen() {
         onPress={() => router.push('/login')}
       >
         <ThemedText style={globalStyles.authLinkText}>
-          Already have an account? Login
+          {string.loginLink}
         </ThemedText>
       </TouchableOpacity>
     </ThemedView>
   );
-} 
+}
