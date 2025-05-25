@@ -111,7 +111,7 @@ const SearchBar = memo(({
   onSearch: (text: string) => void;
 }) => {
   const [inputText, setInputText] = useState('');
-  const searchTimeout = useRef<ReturnType<typeof setTimeout>>();
+  const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<TextInput>(null);
 
   const handleTextChange = useCallback((text: string) => {
