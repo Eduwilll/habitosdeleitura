@@ -13,6 +13,17 @@ export interface Book {
   categories?: string[];
   averageRating?: number;
   status?: 'reading' | 'completed' | 'to-read';
+  saleInfo?: {
+    isEbook: boolean;
+    listPrice?: {
+      amount: number;
+      currencyCode: string;
+    };
+    retailPrice?: {
+      amount: number;
+      currencyCode: string;
+    };
+  };
 }
 
 interface SearchResponse {
@@ -20,24 +31,24 @@ interface SearchResponse {
   totalItems: number;
 }
 
-export async function searchBooks(
+export const searchBooks = async (
   query: string,
   page: number = 1,
-  language: string = 'pt-BR'
-): Promise<SearchResponse> {
+  language: string = 'pt-BR',
+  orderBy: 'newest' | 'relevance' = 'relevance'
+): Promise<{ items: Book[]; totalItems: number }> => {
   try {
     const startIndex = (page - 1) * 20;
     const response = await fetch(
-      `${BASE_URL}/volumes?q=${encodeURIComponent(
-        query
-      )}&langRestrict=${language}&startIndex=${startIndex}&maxResults=20&key=${GOOGLE_BOOKS_API_KEY}`
+      `${BASE_URL}/volumes?q=${encodeURIComponent(query)}&startIndex=${startIndex}&maxResults=20&langRestrict=${language}&orderBy=${orderBy}&country=BR&key=${GOOGLE_BOOKS_API_KEY}`
     );
-
+    
     if (!response.ok) {
       throw new Error('Failed to fetch books');
     }
 
     const data = await response.json();
+    
     return {
       items: data.items?.map((item: any) => ({
         id: item.id,
@@ -49,6 +60,11 @@ export async function searchBooks(
         pageCount: item.volumeInfo.pageCount,
         categories: item.volumeInfo.categories,
         averageRating: item.volumeInfo.averageRating,
+        saleInfo: item.saleInfo ? {
+          isEbook: item.saleInfo.isEbook,
+          listPrice: item.saleInfo.listPrice,
+          retailPrice: item.saleInfo.retailPrice
+        } : undefined
       })) || [],
       totalItems: data.totalItems || 0,
     };
@@ -56,7 +72,7 @@ export async function searchBooks(
     console.error('Error searching books:', error);
     throw error;
   }
-}
+};
 
 export const getBookById = async (bookId: string): Promise<Book> => {
   try {

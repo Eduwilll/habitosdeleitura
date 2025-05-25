@@ -25,11 +25,16 @@ const GENRES = [
 
 // Popular and bestselling books queries
 const POPULAR_QUERIES = [
-  'subject:fiction',
-  'subject:romance',
-  'subject:fantasy',
-  'subject:mystery',
-  'subject:biography'
+  'subject:mais-vendidos-brasil',
+  'subject:best-seller-brasil',
+  'subject:literatura-brasileira',
+  'subject:romance-brasileiro',
+  'subject:contos-brasileiros',
+  'subject:poesia-brasileira',
+  'subject:história-do-brasil',
+  'subject:biografia-brasileira',
+  'subject:ficção-brasileira',
+  'subject:crônicas-brasileiras'
 ];
 
 // Memoized Book Item Component
@@ -181,20 +186,44 @@ export default function TabTwoScreen() {
       setLoading(true);
       setError(null);
       
-      // Fetch books for each popular query
+      // Fetch books for each popular query with sorting
       const popularBooksPromises = POPULAR_QUERIES.map(query => 
-        searchBooks(query, 1, 'pt-BR')
+        searchBooks(query, 1, 'pt-BR', 'relevance') // Use relevance for Brazilian market
       );
       
       const results = await Promise.all(popularBooksPromises);
       
       // Combine and deduplicate books
       const allBooks = results.flatMap(result => result.items);
-      const uniqueBooks = allBooks.filter((book, index, self) =>
-        index === self.findIndex(b => b.id === book.id)
-      );
       
-      setBooks(uniqueBooks);
+      // Sort books by availability in Brazil, rating, and then by publishedDate
+      const sortedBooks = allBooks
+        .filter((book, index, self) =>
+          index === self.findIndex(b => b.id === book.id)
+        )
+        .sort((a, b) => {
+          // First sort by availability in Brazil (has saleInfo)
+          if (a.saleInfo && !b.saleInfo) return -1;
+          if (!a.saleInfo && b.saleInfo) return 1;
+          
+          // Then sort by rating
+          if (a.averageRating && b.averageRating) {
+            return b.averageRating - a.averageRating;
+          }
+          if (a.averageRating) return -1;
+          if (b.averageRating) return 1;
+          
+          // Finally sort by publication date (newest first)
+          if (a.publishedDate && b.publishedDate) {
+            return new Date(b.publishedDate).getTime() - new Date(a.publishedDate).getTime();
+          }
+          if (a.publishedDate) return -1;
+          if (b.publishedDate) return 1;
+          
+          return 0;
+        });
+      
+      setBooks(sortedBooks);
       setHasMore(true);
       setCurrentPage(1);
     } catch (err) {
@@ -247,7 +276,7 @@ export default function TabTwoScreen() {
       if (!query) {
         // Load more popular books
         const results = await Promise.all(
-          POPULAR_QUERIES.map(q => searchBooks(q, nextPage, 'pt-BR'))
+          POPULAR_QUERIES.map(q => searchBooks(q, nextPage, 'pt-BR', 'relevance'))
         );
         
         const newBooks = results.flatMap(result => result.items);
@@ -255,12 +284,32 @@ export default function TabTwoScreen() {
           newBook => !books.some(existingBook => existingBook.id === newBook.id)
         );
         
-        setBooks(prevBooks => [...prevBooks, ...uniqueNewBooks]);
+        // Sort new books using the same criteria
+        const sortedNewBooks = uniqueNewBooks.sort((a, b) => {
+          if (a.saleInfo && !b.saleInfo) return -1;
+          if (!a.saleInfo && b.saleInfo) return 1;
+          
+          if (a.averageRating && b.averageRating) {
+            return b.averageRating - a.averageRating;
+          }
+          if (a.averageRating) return -1;
+          if (b.averageRating) return 1;
+          
+          if (a.publishedDate && b.publishedDate) {
+            return new Date(b.publishedDate).getTime() - new Date(a.publishedDate).getTime();
+          }
+          if (a.publishedDate) return -1;
+          if (b.publishedDate) return 1;
+          
+          return 0;
+        });
+        
+        setBooks(prevBooks => [...prevBooks, ...sortedNewBooks]);
         setCurrentPage(nextPage);
         setHasMore(uniqueNewBooks.length > 0);
       } else {
         // Load more search results
-        const results = await searchBooks(query, nextPage, 'pt-BR');
+        const results = await searchBooks(query, nextPage, 'pt-BR', 'relevance');
         const newBooks = results.items.filter(
           newBook => !books.some(existingBook => existingBook.id === newBook.id)
         );
