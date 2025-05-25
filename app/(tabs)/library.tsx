@@ -6,7 +6,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, Dimensions, Modal, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Dimensions, Linking, Modal, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
 type BookStatusFilter = 'all' | 'reading' | 'completed' | 'to-read';
 
@@ -134,6 +134,16 @@ export default function LibraryScreen() {
     setIsMenuOpen(!isMenuOpen);
   };
 
+  const openInGooglePlayBooks = useCallback(() => {
+    if (currentBook?.id) {
+      const url = `https://play.google.com/store/books/details?id=${currentBook.id}`;
+      Linking.openURL(url).catch((err) => {
+        Alert.alert('Erro', 'Não foi possível abrir o Google Play Livros.');
+        console.error('Error opening Google Play Books:', err);
+      });
+    }
+  }, [currentBook]);
+
   return (
     <View style={styles.container}>
       <ThemedView style={styles.header}>
@@ -254,6 +264,18 @@ export default function LibraryScreen() {
               </TouchableOpacity>
               {isMenuOpen && (
                 <View style={styles.menuOptions}>
+                  <TouchableOpacity 
+                    style={styles.menuOption}
+                    onPress={() => {
+                      openInGooglePlayBooks();
+                      setIsMenuOpen(false);
+                    }}
+                  >
+                    <FontAwesome name="book" size={16} color="#007AFF" style={styles.menuIcon} />
+                    <ThemedText style={styles.menuText}>
+                      Ler no Google Play Livros
+                    </ThemedText>
+                  </TouchableOpacity>
                   <TouchableOpacity 
                     style={styles.menuOption}
                     onPress={() => {

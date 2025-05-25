@@ -2,7 +2,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, Linking, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -28,8 +28,11 @@ export default function BookDetailsScreen() {
   };
 
   const handleReadBook = () => {
-    // TODO: Implement reading functionality
-    Alert.alert('Em Breve', 'A funcionalidade de leitura estará disponível em breve!');
+    const url = `https://play.google.com/store/books/details?id=${book.id}`;
+    Linking.openURL(url).catch((err) => {
+      Alert.alert('Erro', 'Não foi possível abrir o Google Play Livros.');
+      console.error('Error opening Google Play Books:', err);
+    });
   };
 
   return (
