@@ -50,10 +50,6 @@ export default function DatabaseViewer() {
     });
   };
 
-  console.log('Current users state:', users);
-  console.log('Current books state:', books);
-  console.log('Current error state:', error);
-
   return (
     <ScrollView style={styles.container}>
       <View style={styles.headerContainer}>
