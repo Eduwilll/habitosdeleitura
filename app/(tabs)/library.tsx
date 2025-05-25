@@ -147,17 +147,17 @@ export default function LibraryScreen() {
   return (
     <View style={styles.container}>
       <ThemedView style={styles.header}>
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <FontAwesome name="search" size={20} color="#8E8E93" style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Buscar livros..."
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholderTextColor="#8E8E93"
-          />
-        </View>
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <FontAwesome name="search" size={20} color="#8E8E93" style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Buscar livros..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholderTextColor="#8E8E93"
+        />
+      </View>
 
         {/* Status Filter */}
         <ScrollView
@@ -260,8 +260,8 @@ export default function LibraryScreen() {
             </View>
             <View style={styles.menuContainer}>
               <TouchableOpacity style={styles.menuButton} onPress={toggleMenu}>
-                <FontAwesome name="ellipsis-v" size={20} color="#007AFF" />
-              </TouchableOpacity>
+              <FontAwesome name="ellipsis-v" size={20} color="#007AFF" />
+            </TouchableOpacity>
               {isMenuOpen && (
                 <View style={styles.menuOptions}>
                   <TouchableOpacity 
@@ -388,7 +388,7 @@ export default function LibraryScreen() {
                 <ThemedText style={styles.noContentText}>
                   Nenhum conteúdo disponível para este livro.
                 </ThemedText>
-              </View>
+          </View>
             )}
           </ScrollView>
         </View>

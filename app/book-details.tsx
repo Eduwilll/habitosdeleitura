@@ -8,6 +8,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { addBookToLibrary } from '@/services/db';
 import { Book } from '@/services/googleBooks';
+import { colors, globalStyles, spacing, typography } from '@/styles/global';
 
 export default function BookDetailsScreen() {
   const router = useRouter();
@@ -36,12 +37,12 @@ export default function BookDetailsScreen() {
   };
 
   return (
-    <ThemedView style={styles.container}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+    <ThemedView style={globalStyles.container}>
+      <ScrollView style={globalStyles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Header */}
-        <View style={styles.header}>
+        <View style={globalStyles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <FontAwesome name="arrow-left" size={24} color="#007AFF" />
+            <FontAwesome name="arrow-left" size={24} color={colors.primary} />
           </TouchableOpacity>
         </View>
 
@@ -55,7 +56,7 @@ export default function BookDetailsScreen() {
             />
           ) : (
             <View style={styles.coverPlaceholder}>
-              <FontAwesome name="book" size={50} color="#808080" />
+              <FontAwesome name="book" size={50} color={colors.gray.medium} />
             </View>
           )}
           <View style={styles.basicInfo}>
@@ -83,14 +84,17 @@ export default function BookDetailsScreen() {
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
           <TouchableOpacity
-            style={[styles.button, styles.readButton]}
+            style={[globalStyles.button, styles.readButton]}
             onPress={handleReadBook}
           >
-            <FontAwesome name="book" size={20} color="white" style={styles.buttonIcon} />
-            <ThemedText style={styles.buttonText}>Ler</ThemedText>
+            <FontAwesome name="book" size={20} color="white" style={globalStyles.buttonIcon} />
+            <ThemedText style={globalStyles.buttonText}>Ler</ThemedText>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.button, isInLibrary ? styles.addedButton : styles.addButton]}
+            style={[
+              globalStyles.button,
+              isInLibrary ? styles.addedButton : styles.addButton
+            ]}
             onPress={handleAddToLibrary}
             disabled={isInLibrary}
           >
@@ -98,9 +102,9 @@ export default function BookDetailsScreen() {
               name={isInLibrary ? 'check' : 'plus'}
               size={20}
               color="white"
-              style={styles.buttonIcon}
+              style={globalStyles.buttonIcon}
             />
-            <ThemedText style={styles.buttonText}>
+            <ThemedText style={globalStyles.buttonText}>
               {isInLibrary ? 'Adicionado à Biblioteca' : 'Adicionar à Biblioteca'}
             </ThemedText>
           </TouchableOpacity>
@@ -108,24 +112,24 @@ export default function BookDetailsScreen() {
 
         {/* Description */}
         {book.description && (
-          <View style={styles.section}>
-            <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
+          <View style={globalStyles.section}>
+            <ThemedText type="defaultSemiBold" style={globalStyles.sectionTitle}>
               Description
             </ThemedText>
-            <ThemedText style={styles.description}>{book.description}</ThemedText>
+            <ThemedText style={globalStyles.description}>{book.description}</ThemedText>
           </View>
         )}
 
         {/* Categories */}
         {book.categories && book.categories.length > 0 && (
-          <View style={styles.section}>
-            <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
+          <View style={globalStyles.section}>
+            <ThemedText type="defaultSemiBold" style={globalStyles.sectionTitle}>
               Categories
             </ThemedText>
-            <View style={styles.categoriesContainer}>
+            <View style={globalStyles.categoriesContainer}>
               {book.categories.map((category, index) => (
-                <View key={index} style={styles.categoryTag}>
-                  <ThemedText style={styles.categoryText}>{category}</ThemedText>
+                <View key={index} style={globalStyles.categoryTag}>
+                  <ThemedText style={globalStyles.categoryText}>{category}</ThemedText>
                 </View>
               ))}
             </View>
@@ -133,23 +137,23 @@ export default function BookDetailsScreen() {
         )}
 
         {/* Additional Info */}
-        <View style={styles.section}>
-          <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
+        <View style={globalStyles.section}>
+          <ThemedText type="defaultSemiBold" style={globalStyles.sectionTitle}>
             Additional Information
           </ThemedText>
-          <View style={styles.infoGrid}>
+          <View style={globalStyles.infoGrid}>
             {book.averageRating && (
-              <View style={styles.infoItem}>
+              <View style={globalStyles.infoItem}>
                 <FontAwesome name="star" size={20} color="#FFD700" />
-                <ThemedText style={styles.infoText}>
+                <ThemedText style={globalStyles.infoText}>
                   {book.averageRating.toFixed(1)} / 5
                 </ThemedText>
               </View>
             )}
             {book.pageCount && (
-              <View style={styles.infoItem}>
-                <FontAwesome name="file-text-o" size={20} color="#007AFF" />
-                <ThemedText style={styles.infoText}>{book.pageCount} pages</ThemedText>
+              <View style={globalStyles.infoItem}>
+                <FontAwesome name="file-text-o" size={20} color={colors.primary} />
+                <ThemedText style={globalStyles.infoText}>{book.pageCount} pages</ThemedText>
               </View>
             )}
           </View>
@@ -160,134 +164,63 @@ export default function BookDetailsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    paddingTop: 50,
-  },
   backButton: {
-    padding: 8,
+    padding: spacing.sm,
   },
   coverSection: {
-    padding: 16,
+    padding: spacing.lg,
     alignItems: 'center',
   },
   coverImage: {
     width: 200,
     height: 300,
     borderRadius: 12,
-    marginBottom: 16,
+    marginBottom: spacing.lg,
   },
   coverPlaceholder: {
     width: 200,
     height: 300,
     borderRadius: 12,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.gray.light,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: spacing.lg,
   },
   basicInfo: {
     alignItems: 'center',
   },
   title: {
-    fontSize: 24,
+    fontSize: typography.title.fontSize,
+    fontWeight: typography.title.fontWeight,
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: spacing.sm,
   },
   authors: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 4,
+    fontSize: typography.body.fontSize,
+    color: colors.text.secondary,
+    marginBottom: spacing.xs,
   },
   publishedDate: {
-    fontSize: 14,
-    color: '#888',
-    marginBottom: 4,
+    fontSize: typography.caption.fontSize,
+    color: colors.text.tertiary,
+    marginBottom: spacing.xs,
   },
   pageCount: {
-    fontSize: 14,
-    color: '#888',
+    fontSize: typography.caption.fontSize,
+    color: colors.text.tertiary,
   },
   actionButtons: {
     flexDirection: 'row',
-    padding: 16,
-    gap: 12,
-  },
-  button: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 12,
-    borderRadius: 8,
+    padding: spacing.lg,
+    gap: spacing.md,
   },
   readButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
   },
   addButton: {
-    backgroundColor: '#34C759',
+    backgroundColor: colors.success,
   },
   addedButton: {
-    backgroundColor: '#8E8E93',
-  },
-  buttonIcon: {
-    marginRight: 8,
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  section: {
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-  },
-  sectionTitle: {
-    fontSize: 18,
-    marginBottom: 12,
-  },
-  description: {
-    fontSize: 16,
-    lineHeight: 24,
-    color: '#333',
-  },
-  categoriesContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  categoryTag: {
-    backgroundColor: '#f0f0f0',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  categoryText: {
-    fontSize: 14,
-    color: '#666',
-  },
-  infoGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 16,
-  },
-  infoItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  infoText: {
-    fontSize: 16,
-    color: '#333',
+    backgroundColor: colors.gray.medium,
   },
 }); 
