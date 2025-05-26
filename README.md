@@ -105,6 +105,7 @@ habitosdeleitura/
 ├── .expo/                  # Configurações do Expo
 ├── .vscode/               # Configurações do VS Code
 ├── app/                   # Rotas e telas do aplicativo
+|   ├── (admin)           # Telas de adminstrador
 │   ├── (auth)/           # Telas de autenticação
 │   ├── (tabs)/           # Telas principais
 │   └── book-details.tsx  # Tela de detalhes do livro
@@ -142,14 +143,6 @@ habitosdeleitura/
 Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
 
 ## 📞 Suporte
-
-Para suporte, envie um email ou abra uma issue no GitHub.
-
-## 🙏 Agradecimentos
-
-- Google Books API por fornecer dados de livros
-- Comunidade Expo por suas ferramentas incríveis
-- Todos os contribuidores do projeto
 
 ---
 Desenvolvido com ❤️ para incentivar a leitura no Brasil
